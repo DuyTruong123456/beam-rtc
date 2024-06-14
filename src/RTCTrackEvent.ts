@@ -1,9 +1,9 @@
-import { Event } from 'event-target-shim/index';
+import { Event } from 'react-native-webrtc/node_modules/event-target-shim';
 
-import MediaStream from './MediaStream';
-import type MediaStreamTrack from './MediaStreamTrack';
-import RTCRtpReceiver from './RTCRtpReceiver';
-import RTCRtpTransceiver from './RTCRtpTransceiver';
+import MediaStream from 'react-native-webrtc/src/MediaStream';
+import type MediaStreamTrack from 'react-native-webrtc/src/MediaStreamTrack';
+import RTCRtpReceiver from 'react-native-webrtc/src/RTCRtpReceiver';
+import RTCRtpTransceiver from 'react-native-webrtc/src/RTCRtpTransceiver';
 
 type TRACK_EVENTS = 'track'
 

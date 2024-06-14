@@ -1,6 +1,6 @@
-import { Event } from 'event-target-shim/index';
+import { Event } from 'react-native-webrtc/node_modules/event-target-shim';
 
-import type RTCIceCandidate from './RTCIceCandidate';
+import type RTCIceCandidate from 'react-native-webrtc/src/RTCIceCandidate';
 
 type RTC_ICECANDIDATE_EVENTS = 'icecandidate' | 'icecandidateerror'
 

@@ -1,8 +1,8 @@
 import { NativeModules } from 'react-native';
 
-import MediaStreamTrack from './MediaStreamTrack';
-import RTCRtpCapabilities from './RTCRtpCapabilities';
-import RTCRtpSendParameters, { RTCRtpSendParametersInit } from './RTCRtpSendParameters';
+import MediaStreamTrack from 'react-native-webrtc/src/MediaStreamTrack';
+import RTCRtpCapabilities from 'react-native-webrtc/src/RTCRtpCapabilities';
+import RTCRtpSendParameters, { RTCRtpSendParametersInit } from 'react-native-webrtc/src/RTCRtpSendParameters';
 
 const { WebRTCModule } = NativeModules;
 

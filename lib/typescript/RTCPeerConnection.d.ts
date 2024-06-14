@@ -1,14 +1,14 @@
-import { EventTarget, Event } from 'event-target-shim/index';
-import MediaStream from './MediaStream';
-import MediaStreamTrack from './MediaStreamTrack';
-import RTCDataChannel from './RTCDataChannel';
-import RTCDataChannelEvent from './RTCDataChannelEvent';
-import RTCIceCandidateEvent from './RTCIceCandidateEvent';
-import RTCRtpReceiver from './RTCRtpReceiver';
-import RTCRtpSender from './RTCRtpSender';
-import RTCRtpTransceiver from './RTCRtpTransceiver';
-import RTCSessionDescription, { RTCSessionDescriptionInit } from './RTCSessionDescription';
-import RTCTrackEvent from './RTCTrackEvent';
+import { EventTarget, Event } from 'react-native-webrtc/node_modules/event-target-shim';
+import MediaStream from 'react-native-webrtc/lib/typescript/MediaStream';
+import MediaStreamTrack from 'react-native-webrtc/lib/typescript/MediaStreamTrack';
+import RTCDataChannel from 'react-native-webrtc/lib/typescript/RTCDataChannel';
+import RTCDataChannelEvent from 'react-native-webrtc/lib/typescript/RTCDataChannelEvent';
+import RTCIceCandidateEvent from 'react-native-webrtc/lib/typescript/RTCIceCandidateEvent';
+import RTCRtpReceiver from 'react-native-webrtc/lib/typescript/RTCRtpReceiver';
+import RTCRtpSender from 'react-native-webrtc/lib/typescript/RTCRtpSender';
+import RTCRtpTransceiver from 'react-native-webrtc/lib/typescript/RTCRtpTransceiver';
+import RTCSessionDescription, { RTCSessionDescriptionInit } from 'react-native-webrtc/lib/typescript/RTCSessionDescription';
+import RTCTrackEvent from 'react-native-webrtc/lib/typescript/RTCTrackEvent';
 declare type RTCSignalingState = 'stable' | 'have-local-offer' | 'have-remote-offer' | 'have-local-pranswer' | 'have-remote-pranswer' | 'closed';
 declare type RTCIceGatheringState = 'new' | 'gathering' | 'complete';
 declare type RTCPeerConnectionState = 'new' | 'connecting' | 'connected' | 'disconnected' | 'failed' | 'closed';
@@ -113,4 +113,4 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
      */
     _insertTransceiverSorted(order: number, transceiver: RTCRtpTransceiver): void;
 }
-export {};
+export { };

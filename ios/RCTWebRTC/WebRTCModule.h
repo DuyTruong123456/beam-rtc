@@ -4,9 +4,7 @@
 #import <React/RCTBridgeModule.h>
 #import <React/RCTConvert.h>
 #import <React/RCTEventEmitter.h>
-
 #import <WebRTC/WebRTC.h>
-
 static NSString *const kEventPeerConnectionSignalingStateChanged = @"peerConnectionSignalingStateChanged";
 static NSString *const kEventPeerConnectionStateChanged = @"peerConnectionStateChanged";
 static NSString *const kEventPeerConnectionOnRenegotiationNeeded = @"peerConnectionOnRenegotiationNeeded";
@@ -29,7 +27,7 @@ static NSString *const kEventPeerConnectionOnTrack = @"peerConnectionOnTrack";
 @property(nonatomic, strong) RTCPeerConnectionFactory *peerConnectionFactory;
 @property(nonatomic, strong) id<RTCVideoDecoderFactory> decoderFactory;
 @property(nonatomic, strong) id<RTCVideoEncoderFactory> encoderFactory;
-
+@property (nonatomic, strong) RTCAudioTrack *broadcastAudioTrack;
 @property(nonatomic, strong) NSMutableDictionary<NSNumber *, RTCPeerConnection *> *peerConnections;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, RTCMediaStream *> *localStreams;
 @property(nonatomic, strong) NSMutableDictionary<NSString *, RTCMediaStreamTrack *> *localTracks;

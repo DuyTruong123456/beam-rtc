@@ -1,6 +1,6 @@
-import { EventTarget } from 'event-target-shim/index';
-import MessageEvent from './MessageEvent';
-import RTCDataChannelEvent from './RTCDataChannelEvent';
+import { EventTarget } from 'react-native-webrtc/node_modules/event-target-shim';
+import MessageEvent from 'react-native-webrtc/lib/typescript/MessageEvent';
+import RTCDataChannelEvent from 'react-native-webrtc/lib/typescript/RTCDataChannelEvent';
 declare type RTCDataChannelState = 'connecting' | 'open' | 'closing' | 'closed';
 declare type DataChannelEventMap = {
     bufferedamountlow: RTCDataChannelEvent<'bufferedamountlow'>;
@@ -40,4 +40,4 @@ export default class RTCDataChannel extends EventTarget<DataChannelEventMap> {
     close(): void;
     _registerEvents(): void;
 }
-export {};
+export { };

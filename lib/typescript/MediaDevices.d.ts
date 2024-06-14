@@ -1,4 +1,4 @@
-import { EventTarget, Event } from 'event-target-shim/index';
+import { EventTarget, Event } from 'react-native-webrtc/node_modules/event-target-shim';
 declare type MediaDevicesEventMap = {
     devicechange: Event<'devicechange'>;
 };
@@ -14,7 +14,7 @@ declare class MediaDevices extends EventTarget<MediaDevicesEventMap> {
      *
      * @returns {Promise}
      */
-    getDisplayMedia(): Promise<import("./MediaStream").default>;
+    getDisplayMedia(): Promise<import("react-native-webrtc/lib/typescript/MediaStream").default>;
     /**
      * W3C "Media Capture and Streams" compatible {@code getUserMedia}
      * implementation.
@@ -23,7 +23,7 @@ declare class MediaDevices extends EventTarget<MediaDevicesEventMap> {
      * @param {*} constraints
      * @returns {Promise}
      */
-    getUserMedia(constraints: any): Promise<import("./MediaStream").default>;
+    getUserMedia(constraints: any): Promise<import("react-native-webrtc/lib/typescript/MediaStream").default>;
 }
 declare const _default: MediaDevices;
 export default _default;

@@ -1,6 +1,6 @@
-import MediaStreamTrack from './MediaStreamTrack';
-import RTCRtpCapabilities from './RTCRtpCapabilities';
-import RTCRtpSendParameters, { RTCRtpSendParametersInit } from './RTCRtpSendParameters';
+import MediaStreamTrack from 'react-native-webrtc/lib/typescript/MediaStreamTrack';
+import RTCRtpCapabilities from 'react-native-webrtc/lib/typescript/RTCRtpCapabilities';
+import RTCRtpSendParameters, { RTCRtpSendParametersInit } from 'react-native-webrtc/lib/typescript/RTCRtpSendParameters';
 export default class RTCRtpSender {
     _id: string;
     _track: MediaStreamTrack | null;

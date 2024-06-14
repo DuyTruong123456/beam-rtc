@@ -1,6 +1,6 @@
-import RTCRtpCodecCapability from './RTCRtpCodecCapability';
-import RTCRtpReceiver from './RTCRtpReceiver';
-import RTCRtpSender from './RTCRtpSender';
+import RTCRtpCodecCapability from 'react-native-webrtc/lib/typescript/RTCRtpCodecCapability';
+import RTCRtpReceiver from 'react-native-webrtc/lib/typescript/RTCRtpReceiver';
+import RTCRtpSender from 'react-native-webrtc/lib/typescript/RTCRtpSender';
 export default class RTCRtpTransceiver {
     _peerConnectionId: number;
     _sender: RTCRtpSender;

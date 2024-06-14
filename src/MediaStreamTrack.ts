@@ -1,9 +1,9 @@
-import { EventTarget, Event, defineEventAttribute } from 'event-target-shim/index';
+import { EventTarget, Event, defineEventAttribute } from 'react-native-webrtc/node_modules/event-target-shim';
 import { NativeModules } from 'react-native';
 
-import { addListener, removeListener } from './EventEmitter';
-import Logger from './Logger';
-import { deepClone } from './RTCUtil';
+import { addListener, removeListener } from 'react-native-webrtc/src/EventEmitter';
+import Logger from 'react-native-webrtc/src/Logger';
+import { deepClone } from 'react-native-webrtc/src/RTCUtil';
 
 const log = new Logger('pc');
 const { WebRTCModule } = NativeModules;
@@ -110,7 +110,7 @@ export default class MediaStreamTrack extends EventTarget<MediaStreamTrackEventM
         WebRTCModule.mediaStreamTrackSwitchCamera(this.id);
     }
 
-    _setVideoEffect(name:string) {
+    _setVideoEffect(name: string) {
         if (this.remote) {
             throw new Error('Not implemented for remote tracks');
         }

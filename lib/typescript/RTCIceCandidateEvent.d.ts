@@ -1,5 +1,5 @@
-import { Event } from 'event-target-shim/index';
-import type RTCIceCandidate from './RTCIceCandidate';
+import { Event } from 'react-native-webrtc/node_modules/event-target-shim';
+import type RTCIceCandidate from 'react-native-webrtc/lib/typescript/RTCIceCandidate';
 declare type RTC_ICECANDIDATE_EVENTS = 'icecandidate' | 'icecandidateerror';
 interface IRTCDataChannelEventInitDict extends Event.EventInit {
     candidate: RTCIceCandidate | null;
@@ -17,4 +17,4 @@ export default class RTCIceCandidateEvent<TEventType extends RTC_ICECANDIDATE_EV
     candidate: RTCIceCandidate | null;
     constructor(type: TEventType, eventInitDict: IRTCDataChannelEventInitDict);
 }
-export {};
+export { };

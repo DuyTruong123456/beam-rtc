@@ -1,4 +1,4 @@
-import { EventTarget, Event } from 'event-target-shim/index';
+import { EventTarget, Event } from 'react-native-webrtc/node_modules/event-target-shim';
 declare type MediaStreamTrackState = 'live' | 'ended';
 export declare type MediaStreamTrackInfo = {
     id: string;
@@ -62,4 +62,4 @@ export default class MediaStreamTrack extends EventTarget<MediaStreamTrackEventM
     _registerEvents(): void;
     release(): void;
 }
-export {};
+export { };

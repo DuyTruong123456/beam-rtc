@@ -1,8 +1,8 @@
 import { NativeModules } from 'react-native';
 
-import RTCRtpCodecCapability from './RTCRtpCodecCapability';
-import RTCRtpReceiver from './RTCRtpReceiver';
-import RTCRtpSender from './RTCRtpSender';
+import RTCRtpCodecCapability from 'react-native-webrtc/src/RTCRtpCodecCapability';
+import RTCRtpReceiver from 'react-native-webrtc/src/RTCRtpReceiver';
+import RTCRtpSender from 'react-native-webrtc/src/RTCRtpSender';
 
 const { WebRTCModule } = NativeModules;
 
@@ -47,7 +47,7 @@ export default class RTCRtpTransceiver {
     }
 
     set direction(val) {
-        if (![ 'sendonly', 'recvonly', 'sendrecv', 'inactive' ].includes(val)) {
+        if (!['sendonly', 'recvonly', 'sendrecv', 'inactive'].includes(val)) {
             throw new TypeError('Invalid direction provided');
         }
 

@@ -1,5 +1,5 @@
 
-import type MediaStreamError from './MediaStreamError';
+import type MediaStreamError from 'react-native-webrtc/src/MediaStreamError';
 
 export default class MediaStreamErrorEvent {
     type: string;

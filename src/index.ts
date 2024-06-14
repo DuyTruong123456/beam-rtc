@@ -5,25 +5,25 @@ if (WebRTCModule === null) {
     throw new Error(`WebRTC native module not found.\n${Platform.OS === 'ios' ?
         'Try executing the "pod install" command inside your projects ios folder.' :
         'Try executing the "npm install" command inside your projects folder.'
-    }`);
+        }`);
 }
 
-import { setupNativeEvents } from './EventEmitter';
-import Logger from './Logger';
-import mediaDevices from './MediaDevices';
-import MediaStream from './MediaStream';
-import MediaStreamTrack from './MediaStreamTrack';
-import MediaStreamTrackEvent from './MediaStreamTrackEvent';
-import permissions from './Permissions';
-import RTCErrorEvent from './RTCErrorEvent';
-import RTCIceCandidate from './RTCIceCandidate';
-import RTCPeerConnection from './RTCPeerConnection';
-import RTCRtpReceiver from './RTCRtpReceiver';
-import RTCRtpSender from './RTCRtpSender';
-import RTCRtpTransceiver from './RTCRtpTransceiver';
-import RTCSessionDescription from './RTCSessionDescription';
-import RTCView from './RTCView';
-import ScreenCapturePickerView from './ScreenCapturePickerView';
+import { setupNativeEvents } from 'react-native-webrtc/src/EventEmitter';
+import Logger from 'react-native-webrtc/src/Logger';
+import mediaDevices from 'react-native-webrtc/src/MediaDevices';
+import MediaStream from 'react-native-webrtc/src/MediaStream';
+import MediaStreamTrack from 'react-native-webrtc/src/MediaStreamTrack';
+import MediaStreamTrackEvent from 'react-native-webrtc/src/MediaStreamTrackEvent';
+import permissions from 'react-native-webrtc/src/Permissions';
+import RTCErrorEvent from 'react-native-webrtc/src/RTCErrorEvent';
+import RTCIceCandidate from 'react-native-webrtc/src/RTCIceCandidate';
+import RTCPeerConnection from 'react-native-webrtc/src/RTCPeerConnection';
+import RTCRtpReceiver from 'react-native-webrtc/src/RTCRtpReceiver';
+import RTCRtpSender from 'react-native-webrtc/src/RTCRtpSender';
+import RTCRtpTransceiver from 'react-native-webrtc/src/RTCRtpTransceiver';
+import RTCSessionDescription from 'react-native-webrtc/src/RTCSessionDescription';
+import RTCView from 'react-native-webrtc/src/RTCView';
+import ScreenCapturePickerView from 'react-native-webrtc/src/ScreenCapturePickerView';
 
 Logger.enable(`${Logger.ROOT_PREFIX}:*`);
 

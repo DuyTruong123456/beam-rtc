@@ -1,23 +1,23 @@
-import { EventTarget, Event, defineEventAttribute } from 'event-target-shim/index';
+import { EventTarget, Event, defineEventAttribute } from 'react-native-webrtc/node_modules/event-target-shim';
 import { NativeModules } from 'react-native';
 
-import { addListener, removeListener } from './EventEmitter';
-import Logger from './Logger';
-import MediaStream from './MediaStream';
-import MediaStreamTrack from './MediaStreamTrack';
-import MediaStreamTrackEvent from './MediaStreamTrackEvent';
-import RTCDataChannel from './RTCDataChannel';
-import RTCDataChannelEvent from './RTCDataChannelEvent';
-import RTCIceCandidate from './RTCIceCandidate';
-import RTCIceCandidateEvent from './RTCIceCandidateEvent';
-import RTCRtpReceiveParameters from './RTCRtpReceiveParameters';
-import RTCRtpReceiver from './RTCRtpReceiver';
-import RTCRtpSendParameters from './RTCRtpSendParameters';
-import RTCRtpSender from './RTCRtpSender';
-import RTCRtpTransceiver from './RTCRtpTransceiver';
-import RTCSessionDescription, { RTCSessionDescriptionInit } from './RTCSessionDescription';
-import RTCTrackEvent from './RTCTrackEvent';
-import * as RTCUtil from './RTCUtil';
+import { addListener, removeListener } from 'react-native-webrtc/src/EventEmitter';
+import Logger from 'react-native-webrtc/src/Logger';
+import MediaStream from 'react-native-webrtc/src/MediaStream';
+import MediaStreamTrack from 'react-native-webrtc/src/MediaStreamTrack';
+import MediaStreamTrackEvent from 'react-native-webrtc/src/MediaStreamTrackEvent';
+import RTCDataChannel from 'react-native-webrtc/src/RTCDataChannel';
+import RTCDataChannelEvent from 'react-native-webrtc/src/RTCDataChannelEvent';
+import RTCIceCandidate from 'react-native-webrtc/src/RTCIceCandidate';
+import RTCIceCandidateEvent from 'react-native-webrtc/src/RTCIceCandidateEvent';
+import RTCRtpReceiveParameters from 'react-native-webrtc/src/RTCRtpReceiveParameters';
+import RTCRtpReceiver from 'react-native-webrtc/src/RTCRtpReceiver';
+import RTCRtpSendParameters from 'react-native-webrtc/src/RTCRtpSendParameters';
+import RTCRtpSender from 'react-native-webrtc/src/RTCRtpSender';
+import RTCRtpTransceiver from 'react-native-webrtc/src/RTCRtpTransceiver';
+import RTCSessionDescription, { RTCSessionDescriptionInit } from 'react-native-webrtc/src/RTCSessionDescription';
+import RTCTrackEvent from 'react-native-webrtc/src/RTCTrackEvent';
+import * as RTCUtil from 'react-native-webrtc/src/RTCUtil';
 
 const log = new Logger('pc');
 const { WebRTCModule } = NativeModules;
@@ -108,7 +108,7 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
                 }
 
                 if (!Array.isArray(urls)) {
-                    urls = [ urls ];
+                    urls = [urls];
                 }
 
                 // Native WebRTC does case sensitive parsing.
@@ -265,9 +265,9 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
         this._pendingTrackEvents = [];
 
         for (const ev of pendingTrackEvents) {
-            const [ transceiver ] = this
+            const [transceiver] = this
                 .getTransceivers()
-                .filter(t => t.receiver.id ===  ev.receiver.id);
+                .filter(t => t.receiver.id === ev.receiver.id);
 
             // We need to fire this event for an existing track sometimes, like
             // when the transceiver direction (on the sending side) switches from
@@ -379,7 +379,7 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
 
         // According to the W3C docs, the sender could have been reused, and
         // so we check if that is the case, and update accordingly.
-        const [ existingSender ] = this
+        const [existingSender] = this
             .getSenders()
             .filter(s => s.id === sender.id);
 
@@ -388,7 +388,7 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
             existingSender._track = track;
 
             // Update the corresponding transceiver as well
-            const [ existingTransceiver ] = this
+            const [existingTransceiver] = this
                 .getTransceivers()
                 .filter(t => t.sender.id === existingSender.id);
 
@@ -491,7 +491,7 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
 
         existingSender._track = null;
 
-        const [ existingTransceiver ] = this
+        const [existingTransceiver] = this
             .getTransceivers()
             .filter(t => t.sender.id === existingSender.id);
 
@@ -555,7 +555,7 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
         WebRTCModule.peerConnectionClose(this._pcId);
 
         // Mark transceivers as stopped.
-        this._transceivers.forEach(({ transceiver })=> {
+        this._transceivers.forEach(({ transceiver }) => {
             transceiver._setStopped();
         });
     }
@@ -762,13 +762,13 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
      * See https://w3c.github.io/webrtc-pc/#dom-rtcpeerconnection-addtrack for more information
      */
     _trackExists(track: MediaStreamTrack): boolean {
-        const [ sender ] = this
+        const [sender] = this
             .getSenders()
             .filter(
                 sender => sender.track?.id === track.id
             );
 
-        return sender? true : false;
+        return sender ? true : false;
     }
 
     /**
@@ -776,7 +776,7 @@ export default class RTCPeerConnection extends EventTarget<RTCPeerConnectionEven
      */
     _updateTransceivers(transceiverUpdates, removeStopped = false) {
         for (const update of transceiverUpdates) {
-            const [ transceiver ] = this
+            const [transceiver] = this
                 .getTransceivers()
                 .filter(t => t.sender.id === update.transceiverId);
 

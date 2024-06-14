@@ -1,4 +1,4 @@
-import { Event } from 'event-target-shim/index';
+import { Event } from 'react-native-webrtc/node_modules/event-target-shim';
 
 type RTCPeerConnectionErrorFunc =
     | 'addTransceiver'

@@ -1,10 +1,10 @@
 import * as base64 from 'base64-js';
-import { EventTarget, defineEventAttribute } from 'event-target-shim/index';
+import { EventTarget, defineEventAttribute } from 'react-native-webrtc/node_modules/event-target-shim';
 import { NativeModules } from 'react-native';
 
-import { addListener, removeListener } from './EventEmitter';
-import MessageEvent from './MessageEvent';
-import RTCDataChannelEvent from './RTCDataChannelEvent';
+import { addListener, removeListener } from 'react-native-webrtc/src/EventEmitter';
+import MessageEvent from 'react-native-webrtc/src/MessageEvent';
+import RTCDataChannelEvent from 'react-native-webrtc/src/RTCDataChannelEvent';
 
 const { WebRTCModule } = NativeModules;
 

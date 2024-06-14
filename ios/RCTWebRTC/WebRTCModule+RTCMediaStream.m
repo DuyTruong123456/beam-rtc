@@ -10,7 +10,9 @@
 #import "WebRTCModule+RTCPeerConnection.h"
 
 #import "ScreenCaptureController.h"
+#import "AudioCaptureController.h"
 #import "ScreenCapturer.h"
+#import "AudioCapturer.h"
 #import "TrackCapturerEventsEmitter.h"
 #import "VideoCaptureController.h"
 
@@ -142,7 +144,7 @@
     screenCaptureController.eventsDelegate = emitter;
     videoTrack.captureController = screenCaptureController;
     [screenCaptureController startCapture];
-
+    
     return videoTrack;
 }
 - (RTCAudioTrack *)createScreenCaptureAudioTrackWithConstraints:(RTCMediaConstraints *)constraints {
@@ -163,8 +165,14 @@
     NSString *trackUUID = [[NSUUID UUID] UUIDString];
     RTCAudioTrack *audioTrack = [self.peerConnectionFactory audioTrackWithSource:audioSource trackId:trackUUID];
     NSLog(@"App audioTrack", audioTrack);
-    
-    // No need to create ScreenAudioCapturer or ScreenCaptureController for audio
+    AudioCapturer *audioCapturer = [[AudioCapturer alloc] initWithDelegate:audioSource];
+    AudioCaptureController *audioCaptureController =
+        [[AudioCaptureController alloc] initWithCapturer:audioCapturer];
+
+    TrackCapturerEventsEmitter *emitter = [[TrackCapturerEventsEmitter alloc] initWith:trackUUID webRTCModule:self];
+    audioCaptureController.eventsDelegate = emitter;
+    audioTrack.captureController = audioCaptureController;
+    [audioCaptureController startCapture];
     return audioTrack;
 }
 
@@ -182,8 +190,6 @@ RCT_EXPORT_METHOD(getDisplayMedia : (RCTPromiseResolveBlock)resolve rejecter : (
     RTCVideoTrack *videoTrack = [self createScreenCaptureVideoTrack];
     // Hardcode audio constraints
     NSDictionary *mandatoryConstraints = @{
-        @"echoCancellation": @"true",
-        @"noiseSuppression": @"true"
     };
     RTCMediaConstraints *audioConstraints = [[RTCMediaConstraints alloc] initWithMandatoryConstraints:mandatoryConstraints optionalConstraints:nil];
     RTCAudioTrack *audioTrack = [self createScreenCaptureAudioTrackWithConstraints:audioConstraints];
@@ -196,7 +202,7 @@ RCT_EXPORT_METHOD(getDisplayMedia : (RCTPromiseResolveBlock)resolve rejecter : (
     NSString *mediaStreamId = [[NSUUID UUID] UUIDString];
     RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:mediaStreamId];
     [mediaStream addVideoTrack:videoTrack];
-    [mediaStream addAudioTrack:audioTrack];
+ //   [mediaStream addAudioTrack:audioTrack];
     NSMutableArray *tracks = [NSMutableArray array];
 
     if (videoTrack) {
@@ -213,7 +219,8 @@ RCT_EXPORT_METHOD(getDisplayMedia : (RCTPromiseResolveBlock)resolve rejecter : (
         };
         [tracks addObject:videoTrackInfo];
     }
-    if (audioTrack) {
+   if (audioTrack) {
+        NSLog(@"audioTrack not null");
             [mediaStream addAudioTrack:audioTrack];
             NSString *audioTrackId = audioTrack.trackId;
             self.localTracks[audioTrackId] = audioTrack;
@@ -227,10 +234,12 @@ RCT_EXPORT_METHOD(getDisplayMedia : (RCTPromiseResolveBlock)resolve rejecter : (
             };
             [tracks addObject:audioTrackInfo];
         }
+   
     self.localStreams[mediaStreamId] = mediaStream;
 
     NSDictionary *resolvedObject = @{@"streamId" : mediaStreamId, @"track" : tracks};
     resolve(resolvedObject);
+    
 #endif
 }
 
@@ -257,7 +266,7 @@ RCT_EXPORT_METHOD(getUserMedia
     RTCVideoTrack *videoTrack = nil;
 
     if (constraints[@"audio"]) {
-        audioTrack = [self createAudioTrack:constraints];
+        audioTrack = [self createScreenCaptureAudioTrackWithConstraints:constraints];
     }
     if (constraints[@"video"]) {
         videoTrack = [self createVideoTrack:constraints];

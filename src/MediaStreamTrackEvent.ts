@@ -1,8 +1,8 @@
-import { Event } from 'event-target-shim/index';
+import { Event } from 'react-native-webrtc/node_modules/event-target-shim';
 
-import type MediaStreamTrack from './MediaStreamTrack';
+import type MediaStreamTrack from 'react-native-webrtc/src/MediaStreamTrack';
 
-type MEDIA_STREAM_EVENTS = 'addtrack'| 'removetrack'
+type MEDIA_STREAM_EVENTS = 'addtrack' | 'removetrack'
 
 interface IMediaStreamTrackEventInitDict extends Event.EventInit {
   track: MediaStreamTrack;
@@ -16,10 +16,10 @@ interface IMediaStreamTrackEventInitDict extends Event.EventInit {
  * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/MediaStream#events MDN} for details.
  */
 export default class MediaStreamTrackEvent<TEventType extends MEDIA_STREAM_EVENTS> extends Event<TEventType> {
-    /** @eventProperty */
-    track: MediaStreamTrack;
-    constructor(type: TEventType, eventInitDict: IMediaStreamTrackEventInitDict) {
-        super(type, eventInitDict);
-        this.track = eventInitDict.track;
-    }
+  /** @eventProperty */
+  track: MediaStreamTrack;
+  constructor(type: TEventType, eventInitDict: IMediaStreamTrackEventInitDict) {
+    super(type, eventInitDict);
+    this.track = eventInitDict.track;
+  }
 }

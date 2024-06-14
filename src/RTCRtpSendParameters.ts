@@ -1,5 +1,5 @@
-import RTCRtpEncodingParameters, { RTCRtpEncodingParametersInit } from './RTCRtpEncodingParameters';
-import RTCRtpParameters, { RTCRtpParametersInit } from './RTCRtpParameters';
+import RTCRtpEncodingParameters, { RTCRtpEncodingParametersInit } from 'react-native-webrtc/src/RTCRtpEncodingParameters';
+import RTCRtpParameters, { RTCRtpParametersInit } from 'react-native-webrtc/src/RTCRtpParameters';
 
 type DegradationPreferenceType = 'maintain-framerate'
     | 'maintain-resolution'

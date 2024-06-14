@@ -1,5 +1,5 @@
-import RTCRtpEncodingParameters, { RTCRtpEncodingParametersInit } from './RTCRtpEncodingParameters';
-import RTCRtpParameters, { RTCRtpParametersInit } from './RTCRtpParameters';
+import RTCRtpEncodingParameters, { RTCRtpEncodingParametersInit } from 'react-native-webrtc/lib/typescript/RTCRtpEncodingParameters';
+import RTCRtpParameters, { RTCRtpParametersInit } from 'react-native-webrtc/lib/typescript/RTCRtpParameters';
 declare type DegradationPreferenceType = 'maintain-framerate' | 'maintain-resolution' | 'balanced' | 'disabled';
 export interface RTCRtpSendParametersInit extends RTCRtpParametersInit {
     transactionId: string;
@@ -13,4 +13,4 @@ export default class RTCRtpSendParameters extends RTCRtpParameters {
     constructor(init: RTCRtpSendParametersInit);
     toJSON(): RTCRtpSendParametersInit;
 }
-export {};
+export { };

@@ -1,5 +1,5 @@
-import { Event } from 'event-target-shim/index';
-import type RTCDataChannel from './RTCDataChannel';
+import { Event } from 'react-native-webrtc/node_modules/event-target-shim';
+import type RTCDataChannel from 'react-native-webrtc/lib/typescript/RTCDataChannel';
 declare type DATA_CHANNEL_EVENTS = 'open' | 'message' | 'bufferedamountlow' | 'closing' | 'close' | 'error' | 'datachannel';
 interface IRTCDataChannelEventInitDict extends Event.EventInit {
     channel: RTCDataChannel;
@@ -16,4 +16,4 @@ export default class RTCDataChannelEvent<TEventType extends DATA_CHANNEL_EVENTS>
     channel: RTCDataChannel;
     constructor(type: TEventType, eventInitDict: IRTCDataChannelEventInitDict);
 }
-export {};
+export { };

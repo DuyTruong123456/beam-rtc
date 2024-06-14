@@ -1,40 +1,38 @@
-#import "SocketConnection.h"
 #include <sys/socket.h>
 #include <sys/un.h>
 
-@interface SocketConnection () <NSStreamDelegate>
+#import "SocketConnection.h"
 
-@property (nonatomic, assign) int serverSocket;
-@property (nonatomic, strong) dispatch_source_t listeningSource;
+@interface SocketConnection ()
 
-@property (nonatomic, strong) NSThread *networkThread;
+@property(nonatomic, assign) int serverSocket;
+@property(nonatomic, strong) dispatch_source_t listeningSource;
 
-@property (nonatomic, strong) NSInputStream *inputStream;
-@property (nonatomic, strong) NSOutputStream *outputStream;
+@property(nonatomic, strong) NSThread *networkThread;
 
-@property (nonatomic, strong) NSString *identifier;
+@property(nonatomic, strong) NSInputStream *inputStream;
+@property(nonatomic, strong) NSOutputStream *outputStream;
 
 @end
 
 @implementation SocketConnection
 
-- (instancetype)initWithFilePath:(nonnull NSString *)filePath identifier:(NSString *)identifier {
+- (instancetype)initWithFilePath:(nonnull NSString *)filePath {
     self = [super init];
-    if (self) {
-        _identifier = identifier;
-        [self setupNetworkThread];
 
-        self.serverSocket = socket(AF_UNIX, SOCK_STREAM, 0);
-        if (self.serverSocket < 0) {
-            NSLog(@"failure creating socket");
-            return nil;
-        }
+    [self setupNetworkThread];
 
-        if (![self setupSocketWithFileAtPath:filePath]) {
-            close(self.serverSocket);
-            return nil;
-        }
+    self.serverSocket = socket(AF_UNIX, SOCK_STREAM, 0);
+    if (self.serverSocket < 0) {
+        NSLog(@"failure creating socket");
+        return nil;
     }
+
+    if (![self setupSocketWithFileAtPath:filePath]) {
+        close(self.serverSocket);
+        return nil;
+    }
+
     return self;
 }
 
@@ -134,40 +132,6 @@
 - (void)unscheduleStreams {
     [self.inputStream removeFromRunLoop:NSRunLoop.currentRunLoop forMode:NSRunLoopCommonModes];
     [self.outputStream removeFromRunLoop:NSRunLoop.currentRunLoop forMode:NSRunLoopCommonModes];
-}
-
-// MARK: - NSStreamDelegate
-
-- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
-    switch (eventCode) {
-        case NSStreamEventOpenCompleted:
-            NSLog(@"[%@] Stream opened", self.identifier);
-            break;
-        case NSStreamEventHasBytesAvailable:
-            if (aStream == self.inputStream) {
-                uint8_t buffer[1024];
-                NSInteger len;
-                while ([self.inputStream hasBytesAvailable]) {
-                    len = [self.inputStream read:buffer maxLength:sizeof(buffer)];
-                    if (len > 0) {
-                        NSData *data = [NSData dataWithBytes:buffer length:len];
-                        NSLog(@"[%@] Received data: %@", self.identifier, data);
-                        // Process the received data as needed
-                    }
-                }
-            }
-            break;
-        case NSStreamEventErrorOccurred:
-            NSLog(@"[%@] Stream error: %@", self.identifier, aStream.streamError);
-            break;
-        case NSStreamEventEndEncountered:
-            NSLog(@"[%@] Stream end encountered", self.identifier);
-            [aStream close];
-            [aStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:kCFRunLoopDefaultMode];
-            break;
-        default:
-            break;
-    }
 }
 
 @end

@@ -1,8 +1,8 @@
-import { Event } from 'event-target-shim/index';
-import MediaStream from './MediaStream';
-import type MediaStreamTrack from './MediaStreamTrack';
-import RTCRtpReceiver from './RTCRtpReceiver';
-import RTCRtpTransceiver from './RTCRtpTransceiver';
+import { Event } from 'react-native-webrtc/node_modules/event-target-shim';
+import MediaStream from 'react-native-webrtc/lib/typescript/MediaStream';
+import type MediaStreamTrack from 'react-native-webrtc/lib/typescript/MediaStreamTrack';
+import RTCRtpReceiver from 'react-native-webrtc/lib/typescript/RTCRtpReceiver';
+import RTCRtpTransceiver from 'react-native-webrtc/lib/typescript/RTCRtpTransceiver';
 declare type TRACK_EVENTS = 'track';
 interface IRTCTrackEventInitDict extends Event.EventInit {
     streams: MediaStream[];
@@ -26,4 +26,4 @@ export default class RTCTrackEvent<TEventType extends TRACK_EVENTS> extends Even
     readonly track: MediaStreamTrack | null;
     constructor(type: TEventType, eventInitDict: IRTCTrackEventInitDict);
 }
-export {};
+export { };

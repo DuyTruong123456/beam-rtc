@@ -1,5 +1,5 @@
 /// <reference types="react-native" />
-import { Event } from 'event-target-shim/index';
+import { Event } from 'react-native-webrtc/node_modules/event-target-shim';
 export declare type MessageEventData = string | ArrayBuffer | Blob;
 declare type MESSAGE_EVENTS = 'message' | 'messageerror';
 interface IMessageEventInitDict extends Event.EventInit {
@@ -18,4 +18,4 @@ export default class MessageEvent<TEventType extends MESSAGE_EVENTS> extends Eve
     data: MessageEventData;
     constructor(type: TEventType, eventInitDict: IMessageEventInitDict);
 }
-export {};
+export { };

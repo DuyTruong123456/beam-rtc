@@ -2,10 +2,10 @@
 import { NativeModules } from 'react-native';
 
 
-import MediaStream from './MediaStream';
-import MediaStreamError from './MediaStreamError';
-import permissions from './Permissions';
-import * as RTCUtil from './RTCUtil';
+import MediaStream from 'react-native-webrtc/src/MediaStream';
+import MediaStreamError from 'react-native-webrtc/src/MediaStreamError';
+import permissions from 'react-native-webrtc/src/Permissions';
+import * as RTCUtil from 'react-native-webrtc/src/RTCUtil';
 
 const { WebRTCModule } = NativeModules;
 
@@ -49,7 +49,7 @@ export default function getUserMedia(constraints: Constraints = {}): Promise<Med
 
     return new Promise((resolve, reject) => {
         Promise.all(reqPermissions).then(results => {
-            const [ audioPerm, videoPerm ] = results;
+            const [audioPerm, videoPerm] = results;
 
             // Check permission results and remove unneeded permissions.
 

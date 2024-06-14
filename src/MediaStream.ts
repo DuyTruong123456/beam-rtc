@@ -1,9 +1,9 @@
-import { EventTarget, defineEventAttribute } from 'event-target-shim/index';
+import { EventTarget, defineEventAttribute } from 'react-native-webrtc/node_modules/event-target-shim';
 import { NativeModules } from 'react-native';
 
-import MediaStreamTrack, { MediaStreamTrackInfo } from './MediaStreamTrack';
-import MediaStreamTrackEvent from './MediaStreamTrackEvent';
-import { uniqueID } from './RTCUtil';
+import MediaStreamTrack, { MediaStreamTrackInfo } from 'react-native-webrtc/src/MediaStreamTrack';
+import MediaStreamTrackEvent from 'react-native-webrtc/src/MediaStreamTrackEvent';
+import { uniqueID } from 'react-native-webrtc/src/RTCUtil';
 
 const { WebRTCModule } = NativeModules;
 
@@ -138,7 +138,7 @@ export default class MediaStream extends EventTarget<MediaStreamEventMap> {
     }
 
     release(releaseTracks = true): void {
-        const tracks = [ ...this._tracks ];
+        const tracks = [...this._tracks];
 
         for (const track of tracks) {
             this.removeTrack(track);

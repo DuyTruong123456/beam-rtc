@@ -1,6 +1,6 @@
-import { EventTarget } from 'event-target-shim/index';
-import MediaStreamTrack, { MediaStreamTrackInfo } from './MediaStreamTrack';
-import MediaStreamTrackEvent from './MediaStreamTrackEvent';
+import { EventTarget } from 'react-native-webrtc/node_modules/event-target-shim';
+import MediaStreamTrack, { MediaStreamTrackInfo } from 'react-native-webrtc/lib/typescript/MediaStreamTrack';
+import MediaStreamTrackEvent from 'react-native-webrtc/lib/typescript/MediaStreamTrackEvent';
 declare type MediaStreamEventMap = {
     addtrack: MediaStreamTrackEvent<'addtrack'>;
     removetrack: MediaStreamTrackEvent<'removetrack'>;
@@ -45,4 +45,4 @@ export default class MediaStream extends EventTarget<MediaStreamEventMap> {
     toURL(): string;
     release(releaseTracks?: boolean): void;
 }
-export {};
+export { };

@@ -1,6 +1,6 @@
-import RTCRtcpParameters, { RTCRtcpParametersInit } from './RTCRtcpParameters';
-import RTCRtpCodecParameters, { RTCRtpCodecParametersInit } from './RTCRtpCodecParameters';
-import RTCRtpHeaderExtension, { RTCRtpHeaderExtensionInit } from './RTCRtpHeaderExtension';
+import RTCRtcpParameters, { RTCRtcpParametersInit } from 'react-native-webrtc/src/RTCRtcpParameters';
+import RTCRtpCodecParameters, { RTCRtpCodecParametersInit } from 'react-native-webrtc/src/RTCRtpCodecParameters';
+import RTCRtpHeaderExtension, { RTCRtpHeaderExtensionInit } from 'react-native-webrtc/src/RTCRtpHeaderExtension';
 
 
 export interface RTCRtpParametersInit {

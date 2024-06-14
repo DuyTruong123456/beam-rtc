@@ -1,8 +1,8 @@
-import { EventTarget, Event, defineEventAttribute } from 'event-target-shim/index';
+import { EventTarget, Event, defineEventAttribute } from 'react-native-webrtc/node_modules/event-target-shim';
 import { NativeModules } from 'react-native';
 
-import getDisplayMedia from './getDisplayMedia';
-import getUserMedia from './getUserMedia';
+import getDisplayMedia from 'react-native-webrtc/src/getDisplayMedia';
+import getUserMedia from 'react-native-webrtc/src/getUserMedia';
 
 const { WebRTCModule } = NativeModules;
 
