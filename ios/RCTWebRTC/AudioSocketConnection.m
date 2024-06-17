@@ -16,8 +16,9 @@
 @property (nonatomic, assign) BOOL threadStarted;
 
 @end
-
-@implementation AudioSocketConnection
+@implementation AudioSocketConnection {
+    NSUInteger _readLength;
+}
 
 - (instancetype)initWithFilePath:(NSString *)filePath
                       identifier:(NSString *)identifier
@@ -109,7 +110,26 @@
     dispatch_source_cancel(self.listeningSource);
     close(self.serverSocket);
 }
+- (void)readBytesFromStream:(NSInputStream *)stream {
+    NSLog(@"readbytes");
+    if (!stream.hasBytesAvailable) {
+        NSLog(@"nobytes");
+        return;
+    }
 
+    uint8_t buffer[_readLength];
+    NSInteger numberOfBytesRead = [stream read:buffer maxLength:_readLength];
+    if (numberOfBytesRead < 0) {
+        NSLog(@"error reading bytes from stream");
+        return;
+    }
+}
+
+- (void)didCaptureAudioData:(NSData *)audioData {
+    // Handle captured audio data here
+    NSLog(@"Received audio data of length: %lu", (unsigned long)audioData.length);
+    // Example: Send audioData to processing or playback components
+}
 - (void)sendData:(NSData *)data {
     NSInteger bytesWritten = [self.outputStream write:data.bytes maxLength:data.length];
     if (bytesWritten < 0) {
@@ -162,38 +182,6 @@
     [self.outputStream removeFromRunLoop:NSRunLoop.currentRunLoop forMode:NSRunLoopCommonModes];
 }
 
-// MARK: - NSStreamDelegate
 
-- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
-    switch (eventCode) {
-        case NSStreamEventOpenCompleted:
-            NSLog(@"[%@] Stream opened", self.identifier);
-            break;
-        case NSStreamEventHasBytesAvailable:
-            if (aStream == self.inputStream) {
-                uint8_t buffer[1024];
-                NSInteger len;
-                while ([self.inputStream hasBytesAvailable]) {
-                    len = [self.inputStream read:buffer maxLength:sizeof(buffer)];
-                    if (len > 0) {
-                        NSData *data = [NSData dataWithBytes:buffer length:len];
-                        NSLog(@"[%@] Received data: %@", self.identifier, data);
-                        // Process the received data as needed
-                    }
-                }
-            }
-            break;
-        case NSStreamEventErrorOccurred:
-            NSLog(@"[%@] Stream error: %@", self.identifier, aStream.streamError);
-            break;
-        case NSStreamEventEndEncountered:
-            NSLog(@"[%@] Stream end encountered", self.identifier);
-            [aStream close];
-            [aStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:kCFRunLoopDefaultMode];
-            break;
-        default:
-            break;
-    }
-}
 
 @end

@@ -201,8 +201,8 @@ RCT_EXPORT_METHOD(getDisplayMedia : (RCTPromiseResolveBlock)resolve rejecter : (
 
     NSString *mediaStreamId = [[NSUUID UUID] UUIDString];
     RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:mediaStreamId];
-    [mediaStream addVideoTrack:videoTrack];
- //   [mediaStream addAudioTrack:audioTrack];
+   // [mediaStream addVideoTrack:videoTrack];
+   // [mediaStream addAudioTrack:audioTrack];
     NSMutableArray *tracks = [NSMutableArray array];
 
     if (videoTrack) {
@@ -266,7 +266,7 @@ RCT_EXPORT_METHOD(getUserMedia
     RTCVideoTrack *videoTrack = nil;
 
     if (constraints[@"audio"]) {
-        audioTrack = [self createScreenCaptureAudioTrackWithConstraints:constraints];
+        audioTrack = [self createAudioTrack:constraints];
     }
     if (constraints[@"video"]) {
         videoTrack = [self createVideoTrack:constraints];

@@ -75,7 +75,7 @@ NSString *const kaudioRTCAppGroupIdentifier = @"RTCAppGroupIdentifier";
 // MARK: CapturerEventsDelegate Methods
 
 - (void)capturerDidEnd:(RTCVideoCapturer *)capturer {
-    //[self.eventsDelegate capturerDidEnd:capturer];
+    [self.eventsDelegate capturerDidEnd:capturer];
 }
 
 // MARK: Private Methods

@@ -1,23 +1,93 @@
 #import "AudioCapturer.h"
 #import "AudioSocketConnection.h"
-#import <WebRTC/RTCPeerConnectionFactory.h>
-@interface AudioCapturer () <AVCaptureAudioDataOutputSampleBufferDelegate>
+#import <WebRTC/RTCAudioTrack.h>
 
-@property (nonatomic, strong) RTCAudioSource *audioSource;
-@property (nonatomic, strong) RTCAudioTrack *audioTrack;
-@property (nonatomic, strong) dispatch_queue_t audioQueue;
-@property (nonatomic, assign) BOOL isCapturing;
-@property(nonatomic, strong) AudioSocketConnection *connection;
+const NSUInteger kMaxAudioReadLength = 10 * 1024;
+
+@interface AudioMessage : NSObject
+
+@property(nonatomic, strong) NSData *audioData;
+@property(nonatomic, copy, nullable) void (^didComplete)(BOOL success, AudioMessage *message);
+
+- (NSInteger)appendBytes:(UInt8 *)buffer length:(NSUInteger)length;
+
 @end
 
-@implementation AudioCapturer
+@interface AudioMessage ()
 
-- (instancetype)initWithDelegate:delegate {
+@property(nonatomic, assign) CFHTTPMessageRef framedMessage;
+
+@end
+
+@implementation AudioMessage
+
+- (instancetype)init {
+    self = [super init];
+    if (self) {
+        _audioData = [NSData data];
+    }
+    return self;
+}
+
+- (void)dealloc {
+    if (_framedMessage) {
+        CFRelease(_framedMessage);
+    }
+}
+
+- (NSInteger)appendBytes:(UInt8 *)buffer length:(NSUInteger)length {
+    if (!_framedMessage) {
+        _framedMessage = CFHTTPMessageCreateEmpty(kCFAllocatorDefault, false);
+    }
+ 
+    CFHTTPMessageAppendBytes(_framedMessage, buffer, length);
+    if (!CFHTTPMessageIsHeaderComplete(_framedMessage)) {
+        return -1;
+    }
+
+    NSInteger contentLength =
+        [CFBridgingRelease(CFHTTPMessageCopyHeaderFieldValue(_framedMessage, (__bridge CFStringRef) @"Content-Length"))
+            integerValue];
+    NSInteger bodyLength = (NSInteger)[CFBridgingRelease(CFHTTPMessageCopyBody(_framedMessage)) length];
+
+    NSInteger missingBytesCount = contentLength - bodyLength;
+    if (missingBytesCount == 0) {
+        BOOL success = [self unwrapMessage:self.framedMessage];
+        self.didComplete(success, self);
+
+        CFRelease(self.framedMessage);
+        self.framedMessage = NULL;
+    }
+
+    return missingBytesCount;
+}
+
+- (BOOL)unwrapMessage:(CFHTTPMessageRef)framedMessage {
+    NSData *messageData = CFBridgingRelease(CFHTTPMessageCopyBody(_framedMessage));
+    self.audioData = messageData;
+    return true;
+}
+
+@end
+
+@interface AudioCapturer () <NSStreamDelegate>
+
+@property(nonatomic, strong) dispatch_queue_t audioQueue;
+@property(nonatomic, assign) BOOL isCapturing;
+@property(nonatomic, strong) AudioSocketConnection *connection;
+@property(nonatomic, strong) AudioMessage *message;
+
+@end
+
+@implementation AudioCapturer {
+    NSInteger _readLength;
+}
+
+- (instancetype)initWithDelegate:(id<CapturerEventsDelegate>)delegate {
     self = [super init];
     if (self) {
         _eventsDelegate = delegate;
-        _audioQueue = dispatch_queue_create("audioQueue", NULL);
-        [self setupAudioTrack];
+        _audioQueue = dispatch_queue_create("audioQueue", DISPATCH_QUEUE_SERIAL);
     }
     return self;
 }
@@ -26,16 +96,30 @@
     [self stopCapture];
 }
 
+- (void)setConnection:(AudioSocketConnection *)connection {
+    if (_connection != connection) {
+        [_connection close];
+        _connection = connection;
+    }
+}
+
 - (void)startCapture {
     if (self.isCapturing) {
         return;
     }
 
-    dispatch_async(self.audioQueue, ^{
-        [self.audioTrack setIsEnabled:YES];
-    });
-
     self.isCapturing = YES;
+}
+- (void)startCaptureWithConnection:(AudioSocketConnection *)connection {
+    if (self.isCapturing) {
+        [self stopCapture];
+    }
+
+    self.connection = connection;
+    self.message = nil;
+    self.isCapturing = YES;
+
+    [self.connection openWithStreamDelegate:self];
 }
 
 - (void)stopCapture {
@@ -43,63 +127,74 @@
         return;
     }
 
-    dispatch_async(self.audioQueue, ^{
-        [self.audioTrack setIsEnabled:NO];
-    });
-
     self.isCapturing = NO;
+    self.connection = nil;
 }
-- (void)startCaptureWithConnection:(AudioSocketConnection *)connection {
-    NSLog(@"Started capturing audio with connection.");
-    if (self.isCapturing) {
-        // If already capturing, stop current capture first
-        [self stopCapture];
+
+- (void)readBytesFromStream:(NSInputStream *)stream {
+    if (!stream.hasBytesAvailable) {
+        return;
+    }
+    
+    if (!self.message) {
+        self.message = [[AudioMessage alloc] init];
+        _readLength = kMaxAudioReadLength;
+
+        __weak __typeof__(self) weakSelf = self;
+        self.message.didComplete = ^(BOOL success, AudioMessage *message) {
+            if (success) {
+                [weakSelf didCaptureAudioData:message.audioData];
+            }
+
+            weakSelf.message = nil;
+        };
     }
 
-    self.connection = connection;
-    self.isCapturing = YES;
-
-    dispatch_async(self.audioQueue, ^{
-        [self.audioTrack setIsEnabled:YES];
-    });
-
-    // Here you might want to notify the delegate or perform any setup related to the connection
-    // For example:
-    // [self.connection open]; // If open method exists on SocketConnection
-    [self.connection openWithStreamDelegate:self.connection];
-    NSLog(@"Started");
-}
-#pragma mark - AVCaptureAudioDataOutputSampleBufferDelegate
-
-- (void)captureOutput:(AVCaptureOutput *)output
-didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
-       fromConnection:(AVCaptureConnection *)connection {
-    if (!self.isCapturing) {
+    uint8_t buffer[_readLength];
+    NSInteger numberOfBytesRead = [stream read:buffer maxLength:_readLength];
+    if (numberOfBytesRead < 0) {
+        NSLog(@"error reading bytes from stream");
         return;
     }
 
-    dispatch_async(self.audioQueue, ^{
-        CMBlockBufferRef blockBufferRef = CMSampleBufferGetDataBuffer(sampleBuffer);
-        size_t bufferLength = CMBlockBufferGetDataLength(blockBufferRef);
-        NSMutableData *data = [NSMutableData dataWithLength:bufferLength];
-        CMBlockBufferCopyDataBytes(blockBufferRef, 0, bufferLength, data.mutableBytes);
-
-        // Process the audio data as needed
-        [self processAudioData:data];
-    });
+    _readLength = [self.message appendBytes:buffer length:numberOfBytesRead];
+    if (_readLength == -1 || _readLength > kMaxAudioReadLength) {
+        _readLength = kMaxAudioReadLength;
+    }
 }
 
-- (void)processAudioData:(NSData *)data {
-    // Example method for processing audio data
-    // In a real scenario, this would involve sending data to RTC or other processing logic
-    NSLog(@"Processing audio data: %@", data);
+- (void)didCaptureAudioData:(NSData *)audioData {
+    // Handle the captured audio data
+    // For example, you can create an RTCAudioTrack from the audio data and pass it to the delegate
+
+    // Sample code (assuming you have a method to create an RTCAudioTrack from NSData):
+    // RTCAudioTrack *audioTrack = [self createAudioTrackFromData:audioData];
+    // [self.delegate capturer:self didCaptureAudioTrack:audioTrack];
 }
 
-- (void)setupAudioTrack {
-    // Example method for setting up audio track
-    RTCPeerConnectionFactory *peerConnectionFactory = [[RTCPeerConnectionFactory alloc] init];
-    self.audioSource = [peerConnectionFactory audioSourceWithConstraints:nil];
-    self.audioTrack = [peerConnectionFactory audioTrackWithSource:self.audioSource trackId:@"audioTrackId"];
+@end
+
+@implementation AudioCapturer (NSStreamDelegate)
+
+- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
+    switch (eventCode) {
+        case NSStreamEventOpenCompleted:
+            NSLog(@"audio stream open completed");
+            break;
+        case NSStreamEventHasBytesAvailable:
+            [self readBytesFromStream:(NSInputStream *)aStream];
+            break;
+        case NSStreamEventEndEncountered:
+            NSLog(@"audio stream end encountered");
+            [self stopCapture];
+            [self.eventsDelegate capturerDidEnd:self];
+            break;
+        case NSStreamEventErrorOccurred:
+            NSLog(@"audio stream error encountered: %@", aStream.streamError.localizedDescription);
+            break;
+        default:
+            break;
+    }
 }
 
 @end
