@@ -133,6 +133,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
 
 - (void)readBytesFromStream:(NSInputStream *)stream {
     if (!stream.hasBytesAvailable) {
+        NSLog(@"No bytes available to read from stream.");
         return;
     }
     
@@ -144,6 +145,9 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
         self.message.didComplete = ^(BOOL success, AudioMessage *message) {
             if (success) {
                 [weakSelf didCaptureAudioData:message.audioData];
+                NSLog(@"Audio data captured successfully.");
+            } else {
+                NSLog(@"Failed to capture audio data.");
             }
 
             weakSelf.message = nil;
@@ -153,15 +157,24 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     uint8_t buffer[_readLength];
     NSInteger numberOfBytesRead = [stream read:buffer maxLength:_readLength];
     if (numberOfBytesRead < 0) {
-        NSLog(@"error reading bytes from stream");
+        NSLog(@"Error reading bytes from stream: %@", stream.streamError.localizedDescription);
         return;
     }
 
+    NSData *data = [NSData dataWithBytes:buffer length:numberOfBytesRead];
+    NSLog(@"Read %ld bytes from stream.", (long)numberOfBytesRead);
+    NSLog(@"Buffer as NSData: %@", data);
+
     _readLength = [self.message appendBytes:buffer length:numberOfBytesRead];
-    if (_readLength == -1 || _readLength > kMaxAudioReadLength) {
+    if (_readLength == -1) {
+        NSLog(@"Not enough bytes were provided to compute the message length.");
+    } else if (_readLength > kMaxAudioReadLength) {
         _readLength = kMaxAudioReadLength;
     }
+
+    NSLog(@"Remaining bytes to read: %ld", (long)_readLength);
 }
+
 
 - (void)didCaptureAudioData:(NSData *)audioData {
     // Handle the captured audio data
@@ -182,7 +195,9 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
             NSLog(@"audio stream open completed");
             break;
         case NSStreamEventHasBytesAvailable:
+            
             [self readBytesFromStream:(NSInputStream *)aStream];
+            
             break;
         case NSStreamEventEndEncountered:
             NSLog(@"audio stream end encountered");

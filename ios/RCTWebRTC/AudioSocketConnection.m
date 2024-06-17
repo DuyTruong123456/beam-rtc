@@ -181,7 +181,38 @@
     [self.inputStream removeFromRunLoop:NSRunLoop.currentRunLoop forMode:NSRunLoopCommonModes];
     [self.outputStream removeFromRunLoop:NSRunLoop.currentRunLoop forMode:NSRunLoopCommonModes];
 }
+// MARK: - NSStreamDelegate
 
-
-
+- (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
+    switch (eventCode) {
+        case NSStreamEventOpenCompleted:
+            NSLog(@"[%@] Stream opened", self.identifier);
+            break;
+        case NSStreamEventHasBytesAvailable:
+          [self readBytesFromStream:(NSInputStream *)aStream];
+            if (aStream == self.inputStream) {
+                uint8_t buffer[1024];
+                NSInteger len;
+                while ([self.inputStream hasBytesAvailable]) {
+                    len = [self.inputStream read:buffer maxLength:sizeof(buffer)];
+                    if (len > 0) {
+                        NSData *data = [NSData dataWithBytes:buffer length:len];
+                        NSLog(@"[%@] Received data: %@", self.identifier, data);
+                        // Process the received data as needed
+                    }
+                }
+            }
+            break;
+        case NSStreamEventErrorOccurred:
+            NSLog(@"[%@] Stream error: %@", self.identifier, aStream.streamError);
+            break;
+        case NSStreamEventEndEncountered:
+            NSLog(@"[%@] Stream end encountered", self.identifier);
+            [aStream close];
+            [aStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:kCFRunLoopDefaultMode];
+            break;
+        default:
+            break;
+    }
+}
 @end
