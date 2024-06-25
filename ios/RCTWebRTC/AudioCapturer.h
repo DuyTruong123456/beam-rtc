@@ -4,17 +4,16 @@
 #import <WebRTC/RTCAudioTrack.h>
 #import "CapturerEventsDelegate.h"
 #import "AudioSocketConnection.h"
+#import "RTCAudioCapturer.h"
 NS_ASSUME_NONNULL_BEGIN
-
-@interface AudioCapturer : NSObject
-
+@interface AudioCapturer : RTCAudioCapturer
 @property (nonatomic, weak) id<CapturerEventsDelegate> eventsDelegate;
-
-- (instancetype)initWithDelegate:delegate;
+@property (nonatomic, weak) RTCAudioDeviceModule * audioDeviceModule;
+//@property(nonatomic, nonnull, readonly) RTCAudioDeviceModule *audioDeviceModule;
+- (instancetype)initWithDelegate:(__weak id<RTCAudioCapturerDelegate>)delegate
+                audioDeviceModule:(RTCAudioDeviceModule*)audioDeviceModule;
 - (void)startCapture;
 - (void)stopCapture;
 - (void)startCaptureWithConnection:(AudioSocketConnection *)connection; // Declare the new method
-
 @end
-
 NS_ASSUME_NONNULL_END

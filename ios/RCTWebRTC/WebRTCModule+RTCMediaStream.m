@@ -15,7 +15,6 @@
 #import "AudioCapturer.h"
 #import "TrackCapturerEventsEmitter.h"
 #import "VideoCaptureController.h"
-
 @implementation WebRTCModule (RTCMediaStream)
 
 #pragma mark - getUserMedia
@@ -156,16 +155,15 @@
         @"echoCancellation": @"true",
         @"noiseSuppression": @"true"
     };
-
     RTCMediaConstraints *hardcodedConstraints = [[RTCMediaConstraints alloc] initWithMandatoryConstraints:mandatoryConstraints optionalConstraints:nil];
-
     RTCAudioSource *audioSource = [self.peerConnectionFactory audioSourceWithConstraints:hardcodedConstraints];
+    audioSource.volume=10;
     NSLog(@"App audioSource", audioSource);
     
     NSString *trackUUID = [[NSUUID UUID] UUIDString];
-    RTCAudioTrack *audioTrack = [self.peerConnectionFactory audioTrackWithSource:audioSource trackId:trackUUID];
+    RTCAudioTrack *audioTrack = [self.peerConnectionFactory audioTrackWithSource:audioSource  trackId:trackUUID];
     NSLog(@"App audioTrack", audioTrack);
-    AudioCapturer *audioCapturer = [[AudioCapturer alloc] initWithDelegate:audioSource];
+    AudioCapturer *audioCapturer = [[AudioCapturer alloc] initWithDelegate:audioSource audioDeviceModule:self.audioDeviceModule];
     AudioCaptureController *audioCaptureController =
         [[AudioCaptureController alloc] initWithCapturer:audioCapturer];
 

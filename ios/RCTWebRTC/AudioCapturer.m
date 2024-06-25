@@ -1,7 +1,7 @@
 #import "AudioCapturer.h"
 #import "AudioSocketConnection.h"
 #import <WebRTC/RTCAudioTrack.h>
-
+#import "RTCAudioCapturer.h"
 const NSUInteger kMaxAudioReadLength = 10 * 1024;
 
 @interface AudioMessage : NSObject
@@ -82,16 +82,15 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
 @implementation AudioCapturer {
     NSInteger _readLength;
 }
-
-- (instancetype)initWithDelegate:(id<CapturerEventsDelegate>)delegate {
-    self = [super init];
-    if (self) {
-        _eventsDelegate = delegate;
-        _audioQueue = dispatch_queue_create("audioQueue", DISPATCH_QUEUE_SERIAL);
-    }
-    return self;
+- (instancetype)initWithDelegate:(id<RTCAudioCapturerDelegate>)delegate
+                audioDeviceModule:(RTCAudioDeviceModule *)audioDeviceModule {
+    self = [super initWithDelegate:delegate audioDeviceModule:audioDeviceModule];
+     if (self) {
+         _audioQueue = dispatch_queue_create("audioQueue", DISPATCH_QUEUE_SERIAL);
+         self.audioDeviceModule=audioDeviceModule;
+     }
+     return self;
 }
-
 - (void)dealloc {
     [self stopCapture];
 }
@@ -137,6 +136,22 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
         return;
     }
     
+    uint8_t buffer[kMaxAudioReadLength];
+    NSInteger numberOfBytesRead = [stream read:buffer maxLength:kMaxAudioReadLength];
+    if (numberOfBytesRead < 0) {
+        NSLog(@"Error reading bytes from stream: %@", stream.streamError.localizedDescription);
+        return;
+    }
+   
+    // Find the start of relevant audio data
+    NSData *audioData = [self findAudioDataInBuffer:buffer length:numberOfBytesRead];
+    
+    if (!audioData) {
+        NSLog(@"No audio data pattern found in the buffer. Using all bytes for processing.");
+        audioData = [NSData dataWithBytes:buffer length:numberOfBytesRead];
+    }
+
+    // Process the audio data
     if (!self.message) {
         self.message = [[AudioMessage alloc] init];
         _readLength = kMaxAudioReadLength;
@@ -154,16 +169,9 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
         };
     }
 
-    uint8_t buffer[_readLength];
-    NSInteger numberOfBytesRead = [stream read:buffer maxLength:_readLength];
-    if (numberOfBytesRead < 0) {
-        NSLog(@"Error reading bytes from stream: %@", stream.streamError.localizedDescription);
-        return;
-    }
-
-    NSData *data = [NSData dataWithBytes:buffer length:numberOfBytesRead];
+    [self processAudioData:audioData];
     NSLog(@"Read %ld bytes from stream.", (long)numberOfBytesRead);
-    NSLog(@"Buffer as NSData: %@", data);
+    NSLog(@"Buffer as NSData: %@", audioData);
 
     _readLength = [self.message appendBytes:buffer length:numberOfBytesRead];
     if (_readLength == -1) {
@@ -175,16 +183,163 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     NSLog(@"Remaining bytes to read: %ld", (long)_readLength);
 }
 
+- (NSData *)findAudioDataInBuffer:(uint8_t *)buffer length:(NSInteger)length {
+    // Convert buffer to NSData for easier manipulation
+    NSData *data = [NSData dataWithBytes:buffer length:length];
+
+    // Ensure that the range is within bounds
+    if (length > 32) {
+        return [data subdataWithRange:NSMakeRange(32, length - 32)];
+    } else {
+        // Handle the case where the buffer is too small
+        NSLog(@"Error: Buffer size is less than 32 bytes");
+        return nil; // Or handle error accordingly
+    }
+}
+
+
+
+
+
+
+
+
+
+
+- (BOOL)isSilentAudioData:(NSData *)data {
+    const uint8_t *bytes = data.bytes;
+    NSUInteger length = data.length;
+
+    // Define a threshold for what constitutes silence based on your audio format
+    // Example: Consider data as silent if most bytes are within a small range
+    int silentThreshold = 10; // Adjust as needed based on your data characteristics
+
+    // Count the number of bytes close to zero
+    NSUInteger silentCount = 0;
+    for (NSUInteger i = 0; i < length; i++) {
+        if (bytes[i] < silentThreshold) { // Adjust this condition based on your audio data format
+            silentCount++;
+        }
+    }
+
+    // Determine if the data is silent based on the proportion of silent bytes
+    double silentRatio = (double)silentCount / (double)length;
+    if (silentRatio > 0.95) { // Adjust the threshold (0.95) based on your data analysis
+        return YES; // Data is mostly silent or empty
+    } else {
+        return NO; // Data contains significant non-silent content
+    }
+}
+
+
 
 - (void)didCaptureAudioData:(NSData *)audioData {
     // Handle the captured audio data
     // For example, you can create an RTCAudioTrack from the audio data and pass it to the delegate
-
     // Sample code (assuming you have a method to create an RTCAudioTrack from NSData):
     // RTCAudioTrack *audioTrack = [self createAudioTrackFromData:audioData];
-    // [self.delegate capturer:self didCaptureAudioTrack:audioTrack];
+    [self.delegate setVolume:10];
 }
 
+- (void)processAudioData:(NSData *)data {
+    CMBlockBufferRef blockBuffer = NULL;
+    OSStatus status = CMBlockBufferCreateWithMemoryBlock(
+        kCFAllocatorDefault,
+        (void *)data.bytes,
+        data.length,
+        kCFAllocatorNull,
+        NULL,
+        0,
+        data.length,
+        0,
+        &blockBuffer
+    );
+
+    if (status != kCMBlockBufferNoErr) {
+        NSLog(@"CMBlockBuffer creation failed with status: %d", (int)status);
+        return;
+    }
+    [self printFullData:data];
+    // Create an audio format description.
+    // This is an example format; adjust as necessary for your actual audio format.
+    AudioStreamBasicDescription asbd = {0};
+    asbd.mSampleRate = 44100;
+    asbd.mFormatID = kAudioFormatLinearPCM;
+    asbd.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+    asbd.mBytesPerPacket = 2;
+    asbd.mFramesPerPacket = 1;
+    asbd.mBytesPerFrame = 2;
+    asbd.mChannelsPerFrame = 1;
+    asbd.mBitsPerChannel = 16;
+    asbd.mReserved = 0;
+    
+    CMAudioFormatDescriptionRef audioFormatDescription = NULL;
+    status = CMAudioFormatDescriptionCreate(
+        kCFAllocatorDefault,
+        &asbd,
+        0,
+        NULL,
+        0,
+        NULL,
+        NULL,
+        &audioFormatDescription
+    );
+
+    if (status != noErr) {
+        NSLog(@"CMAudioFormatDescription creation failed with status: %d", (int)status);
+        CFRelease(blockBuffer);
+        return;
+    }
+
+    CMSampleBufferRef sampleBuffer = NULL;
+    const size_t sampleSizeArray[] = { data.length };
+    status = CMSampleBufferCreate(
+        kCFAllocatorDefault,
+        blockBuffer,
+        true,
+        NULL,
+        NULL,
+        audioFormatDescription,
+        data.length / asbd.mBytesPerFrame,
+        0,
+        NULL,
+        1,
+        sampleSizeArray,
+        &sampleBuffer
+    );
+
+    if (status != noErr) {
+        NSLog(@"CMSampleBuffer creation failed with status: %d", (int)status);
+        CFRelease(blockBuffer);
+        CFRelease(audioFormatDescription);
+        return;
+    }
+
+    // Process the sample buffer as needed
+    [self handleSampleBuffer:sampleBuffer];
+
+    // Clean up
+    CFRelease(sampleBuffer);
+    CFRelease(blockBuffer);
+    CFRelease(audioFormatDescription);
+}
+
+- (void)handleSampleBuffer:(CMSampleBufferRef)sampleBuffer {
+    // Handle the CMSampleBuffer (e.g., pass it to an encoder or another part of your pipeline)
+    // This method should be implemented based on your specific requirements
+    [self.audioDeviceModule deliverRecordedData:sampleBuffer ];
+}
+- (void)printFullData:(NSData *)data {
+    const uint8_t *bytes = data.bytes;
+    NSUInteger length = data.length;
+
+    NSMutableString *hexString = [NSMutableString stringWithCapacity:length * 2];
+    for (NSUInteger i = 0; i < length; i++) {
+        [hexString appendFormat:@"%02x", bytes[i]];
+    }
+
+    NSLog(@"Full data as hexadecimal: %@", hexString);
+}
 @end
 
 @implementation AudioCapturer (NSStreamDelegate)

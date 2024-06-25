@@ -14,7 +14,7 @@
 #import <WebRTC/RTCRtpTransceiver.h>
 #import <WebRTC/RTCSessionDescription.h>
 #import <WebRTC/RTCStatisticsReport.h>
-
+#import <WebRTC/RTCAudioDeviceModule.h>
 #import "SerializeUtils.h"
 #import "WebRTCModule+RTCDataChannel.h"
 #import "WebRTCModule+RTCPeerConnection.h"

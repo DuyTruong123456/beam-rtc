@@ -57,8 +57,6 @@ NSString *const kaudioRTCAppGroupIdentifier = @"RTCAppGroupIdentifier";
                                                         peerConnectionFactory:peerConnectionFactory];
     if (self.audioConnection) {
         [self.capturer startCaptureWithConnection:self.audioConnection];
-        //[self.audioConnection openWithStreamDelegate:audioConnection];
-       // self.audioTrack = self.audioConnection.audioTrack;
         NSLog(@"Created AudioSocketConnection for rtc_Audio");
     } else {
         NSLog(@"Failed to create AudioSocketConnection for rtc_Audio");

@@ -10,7 +10,6 @@
 #import "WebRTCModule+RTCPeerConnection.h"
 #import "WebRTCModule.h"
 #import "WebRTCModuleOptions.h"
-
 @interface WebRTCModule ()
 @end
 
@@ -40,7 +39,6 @@
     self = [super init];
     if (self) {
         WebRTCModuleOptions *options = [WebRTCModuleOptions sharedInstance];
-        id<RTCAudioDevice> audioDevice = options.audioDevice;
         id<RTCVideoDecoderFactory> decoderFactory = options.videoDecoderFactory;
         id<RTCVideoEncoderFactory> encoderFactory = options.videoEncoderFactory;
         NSDictionary *fieldTrials = options.fieldTrials;
@@ -63,6 +61,9 @@
         if (decoderFactory == nil) {
             decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
         }
+            self.audioDeviceModule = [[RTCAudioDeviceModule alloc] init];
+            [self.audioDeviceModule setExternalAudio:true];
+        
         _encoderFactory = encoderFactory;
         _decoderFactory = decoderFactory;
 
@@ -71,7 +72,7 @@
 
         _peerConnectionFactory = [[RTCPeerConnectionFactory alloc] initWithEncoderFactory:encoderFactory
                                                                            decoderFactory:decoderFactory
-                                                                              audioDevice:audioDevice];
+                                                                        audioDeviceModule:self.audioDeviceModule];
 
         _peerConnections = [NSMutableDictionary new];
         _localStreams = [NSMutableDictionary new];

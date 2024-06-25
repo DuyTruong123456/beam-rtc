@@ -5,6 +5,7 @@
 #import <React/RCTConvert.h>
 #import <React/RCTEventEmitter.h>
 #import <WebRTC/WebRTC.h>
+//#import "WebRTCios.xcframework/ios-arm64/WebRTCios.framework/Headers/RTCPeerConnectionFactory.h"
 static NSString *const kEventPeerConnectionSignalingStateChanged = @"peerConnectionSignalingStateChanged";
 static NSString *const kEventPeerConnectionStateChanged = @"peerConnectionStateChanged";
 static NSString *const kEventPeerConnectionOnRenegotiationNeeded = @"peerConnectionOnRenegotiationNeeded";
@@ -25,6 +26,7 @@ static NSString *const kEventPeerConnectionOnTrack = @"peerConnectionOnTrack";
 @property(nonatomic, strong) dispatch_queue_t workerQueue;
 
 @property(nonatomic, strong) RTCPeerConnectionFactory *peerConnectionFactory;
+@property(nonatomic, strong) RTCAudioDeviceModule *audioDeviceModule;
 @property(nonatomic, strong) id<RTCVideoDecoderFactory> decoderFactory;
 @property(nonatomic, strong) id<RTCVideoEncoderFactory> encoderFactory;
 @property (nonatomic, strong) RTCAudioTrack *broadcastAudioTrack;

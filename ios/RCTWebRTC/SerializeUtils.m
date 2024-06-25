@@ -1,5 +1,4 @@
 #import "SerializeUtils.h"
-
 @implementation SerializeUtils
 + (NSDictionary *)transceiverToJSONWithPeerConnectionId:(NSNumber *)id
                                             transceiver:(RTCRtpTransceiver *_Nonnull)transceiver {
@@ -170,33 +169,7 @@
     };
 }
 
-+ (NSDictionary *)capabilitiesToJSON:(RTCRtpCapabilities *)capabilities {
-    NSMutableArray *codecs = [NSMutableArray new];
 
-    for (RTCRtpCodecCapability *codec in capabilities.codecs) {
-        [codecs addObject:[self codecCapabilityToJSON:codec]];
-    }
-
-    return @{@"codecs" : codecs};
-}
-
-+ (NSDictionary *)codecCapabilityToJSON:(RTCRtpCodecCapability *)codec {
-    NSMutableDictionary *codecDictionary = [NSMutableDictionary new];
-
-    codecDictionary[@"payloadType"] = codec.preferredPayloadType;
-    codecDictionary[@"mimeType"] = codec.mimeType;
-    codecDictionary[@"clockRate"] = codec.clockRate;
-
-    if (codec.numChannels) {
-        codecDictionary[@"channels"] = codec.numChannels;
-    }
-
-    if (codec.parameters.count) {
-        codecDictionary[@"sdpFmtpLine"] = [self serializeSdpParameters:codec.parameters];
-    }
-
-    return codecDictionary;
-}
 
 + (NSString *)serializeSdpParameters:(NSDictionary *)parameters {
     if (parameters == nil || parameters.count == 0) {
