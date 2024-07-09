@@ -9,7 +9,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface AudioCapturer : RTCAudioCapturer
 @property (nonatomic, weak) id<CapturerEventsDelegate> eventsDelegate;
 @property (nonatomic, weak) RTCAudioDeviceModule * audioDeviceModule;
-//@property(nonatomic, nonnull, readonly) RTCAudioDeviceModule *audioDeviceModule;
+@property(nonatomic) float numBufferReceive;
 - (instancetype)initWithDelegate:(__weak id<RTCAudioCapturerDelegate>)delegate
                 audioDeviceModule:(RTCAudioDeviceModule*)audioDeviceModule;
 - (void)startCapture;
