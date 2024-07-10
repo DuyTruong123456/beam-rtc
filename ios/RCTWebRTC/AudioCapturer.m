@@ -80,21 +80,37 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     NSData *audioData = [NSData dataWithBytes:buffer length:numberOfBytesRead];
     [self processAudioData:audioData];
     NSLog(@"Read %ld bytes from stream.", (long)numberOfBytesRead);
-    NSLog(@"Buffer as NSData: %@", audioData);
+   // NSLog(@"Buffer as NSData: %@", audioData);
 }
 
 
 - (void)processAudioData:(NSData *)data {
     self.numBufferReceive++;
+    if (data.length < 13) {
+        NSLog(@"Data length is less than 13 bytes");
+        return;
+    }
+    
+    // First 13 bytes
+    NSData *timestampData = [data subdataWithRange:NSMakeRange(0, 13)];
+    NSLog(@"First 13 bytes: %@", timestampData);
+    NSString *timeStampDataString = [[NSString alloc] initWithData:timestampData encoding:NSUTF8StringEncoding];
+    float timeStampDataFloat = [timeStampDataString floatValue];
+    NSLog(@"First 13 bytes as float: %f", timeStampDataFloat);
+    // Remaining bytes after the first 13 bytes
+    NSData *soundData = [data subdataWithRange:NSMakeRange(13, data.length - 13)];
+    NSLog(@"Rest of data: %@", soundData);
+    
+    // Create CMBlockBuffer skipping first 13 bytes
     CMBlockBufferRef blockBuffer = NULL;
     OSStatus status = CMBlockBufferCreateWithMemoryBlock(
         kCFAllocatorDefault,
-        (void *)data.bytes,
-        data.length,
+        (void *)soundData.bytes,  // Pointer to data bytes after skipping first 13 bytes
+        soundData.length,
         kCFAllocatorNull,
         NULL,
         0,
-        data.length,
+        soundData.length,
         0,
         &blockBuffer
     );
@@ -103,7 +119,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
         NSLog(@"CMBlockBuffer creation failed with status: %d", (int)status);
         return;
     }
-    [self printFullData:data];
+    [self printFullData:soundData];
     // Create an audio format description.
     // This is an example format; adjust as necessary for your actual audio format.
     AudioStreamBasicDescription asbd = {0};
@@ -135,28 +151,19 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     }
 
     // Number of samples
-    CMItemCount numSamples = data.length / asbd.mBytesPerFrame;
+    CMItemCount numSamples = soundData.length / asbd.mBytesPerFrame;
+    CMTime frameDuration = CMTimeMake(1, asbd.mSampleRate);
+   // CMTime startPresentationTime = CMTimeMultiply(frameDuration, self.numBufferReceive * numSamples);
+    CMTime startPresentationTime = CMTimeMakeWithSeconds(timeStampDataFloat, asbd.mSampleRate);
+    CMSampleTimingInfo timingInfo = {
+        .duration = frameDuration,
+        .presentationTimeStamp = startPresentationTime,
+        .decodeTimeStamp = kCMTimeInvalid
+    };
+    NSLog(@"Start Presentation Time: %.5f seconds", CMTimeGetSeconds(startPresentationTime));
 
     // Create sample timing info array
-    CMSampleTimingInfo *timingInfo = (CMSampleTimingInfo *)malloc(sizeof(CMSampleTimingInfo) * numSamples);
-    if (timingInfo == NULL) {
-        NSLog(@"Failed to allocate memory for timing info");
-        CFRelease(blockBuffer);
-        CFRelease(audioFormatDescription);
-        return;
-    }
 
-    CMTime frameDuration = CMTimeMake(1, asbd.mSampleRate);
-    CMTime startPresentationTime = CMTimeMakeWithSeconds(677495.289706/*+ self.numBufferReceive* 0.23213*/, asbd.mSampleRate); // Starting presentation timestamp
-
-    // Increment for each sample
-    CMTime incrementTime = CMTimeMakeWithSeconds(0.23213, asbd.mSampleRate);
-
-    for (CMItemCount i = 0; i < numSamples; i++) {
-        timingInfo[i].duration = frameDuration;
-        timingInfo[i].presentationTimeStamp = CMTimeAdd(startPresentationTime, CMTimeMultiply(incrementTime, i));
-        timingInfo[i].decodeTimeStamp = kCMTimeInvalid;
-    }
 
     // Number of entries in the sampleSizeArray
     CMItemCount numSampleSizeEntries = 1;
@@ -172,18 +179,17 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
         NULL,
         audioFormatDescription,
         numSamples,
-        numSamples, // Number of timing entries
-        timingInfo,
+        numSampleSizeEntries, // Number of timing entries
+        &timingInfo,
         numSampleSizeEntries,
         &sampleSize,
         &sampleBuffer
     );
-    free(timingInfo);
     CMTime duration = CMSampleBufferGetDuration(sampleBuffer);
     if (CMTIME_IS_INVALID(duration)) {
         NSLog(@"Duration is invalid");
     } else {
-        NSLog(@"Duration: %.2f seconds", CMTimeGetSeconds(duration));
+        NSLog(@"Duration: %.5f seconds", CMTimeGetSeconds(duration));
     }
 
     // Get the presentation timestamp of the sample buffer
@@ -234,7 +240,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
         [hexString appendFormat:@"%02x", bytes[i]];
     }
 
-    NSLog(@"Full data as hexadecimal: %@", hexString);
+  // NSLog(@"Full data as hexadecimal: %@", hexString);
 }
 @end
 
