@@ -30,7 +30,7 @@ NSString *const kaudioRTCAppGroupIdentifier = @"RTCAppGroupIdentifier";
     NSError *error;
     NSData *fileData = [NSData dataWithContentsOfFile:filePath options:NSDataReadingMappedIfSafe error:&error];
     if (error) {
-        NSLog(@"Failed to read file at path %@ with error: %@", filePath, error.localizedDescription);
+     //   NSLog(@"Failed to read file at path %@ with error: %@", filePath, error.localizedDescription);
         return nil;
     }
     return fileData;
@@ -42,7 +42,7 @@ NSString *const kaudioRTCAppGroupIdentifier = @"RTCAppGroupIdentifier";
 
 - (void)startCapture {
     if (!self.appGroupIdentifier) {
-        NSLog(@"App group identifier is missing");
+      //  NSLog(@"App group identifier is missing");
         return;
     }
   //  [self.audioConnection close];
@@ -50,16 +50,16 @@ NSString *const kaudioRTCAppGroupIdentifier = @"RTCAppGroupIdentifier";
 
     // Setup for rtc_Audio (Audio)
     NSString *audioSocketFilePath = [self filePathForApplicationGroupIdentifier:self.appGroupIdentifier component:kRTCAudioSocketFD];
-    NSLog(@"Socket file path for rtc_Audio: %@", audioSocketFilePath);
+    //NSLog(@"Socket file path for rtc_Audio: %@", audioSocketFilePath);
     RTCPeerConnectionFactory *peerConnectionFactory = [[RTCPeerConnectionFactory alloc] init];
     self.audioConnection = [[AudioSocketConnection alloc] initWithFilePath:audioSocketFilePath
                                                                   identifier:kRTCAudioSocketFD
                                                         peerConnectionFactory:peerConnectionFactory];
     if (self.audioConnection) {
         [self.capturer startCaptureWithConnection:self.audioConnection];
-        NSLog(@"Created AudioSocketConnection for rtc_Audio");
+      //  NSLog(@"Created AudioSocketConnection for rtc_Audio");
     } else {
-        NSLog(@"Failed to create AudioSocketConnection for rtc_Audio");
+      //  NSLog(@"Failed to create AudioSocketConnection for rtc_Audio");
     }
 }
 
@@ -86,7 +86,7 @@ NSString *const kaudioRTCAppGroupIdentifier = @"RTCAppGroupIdentifier";
 - (NSString *)filePathForApplicationGroupIdentifier:(NSString *)identifier component:(NSString *)component {
     NSURL *sharedContainer = [[NSFileManager defaultManager] containerURLForSecurityApplicationGroupIdentifier:identifier];
     NSString *socketFilePath = [[sharedContainer URLByAppendingPathComponent:component] path];
-    NSLog(@"Socket file path for %{public}s: %{public}s", component, socketFilePath);
+   // NSLog(@"Socket file path for %{public}s: %{public}s", component, socketFilePath);
     return socketFilePath;
 }
 

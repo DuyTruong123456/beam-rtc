@@ -111,29 +111,29 @@
     close(self.serverSocket);
 }
 - (void)readBytesFromStream:(NSInputStream *)stream {
-    NSLog(@"readbytes");
+  //  NSLog(@"readbytes");
     if (!stream.hasBytesAvailable) {
-        NSLog(@"nobytes");
+       // NSLog(@"nobytes");
         return;
     }
 
     uint8_t buffer[_readLength];
     NSInteger numberOfBytesRead = [stream read:buffer maxLength:_readLength];
     if (numberOfBytesRead < 0) {
-        NSLog(@"error reading bytes from stream");
+      //  NSLog(@"error reading bytes from stream");
         return;
     }
 }
 
 - (void)didCaptureAudioData:(NSData *)audioData {
     // Handle captured audio data here
-    NSLog(@"Received audio data of length: %lu", (unsigned long)audioData.length);
+    //NSLog(@"Received audio data of length: %lu", (unsigned long)audioData.length);
     // Example: Send audioData to processing or playback components
 }
 - (void)sendData:(NSData *)data {
     NSInteger bytesWritten = [self.outputStream write:data.bytes maxLength:data.length];
     if (bytesWritten < 0) {
-        NSLog(@"Failed to write data to output stream");
+       // NSLog(@"Failed to write data to output stream");
     }
 }
 
@@ -156,7 +156,7 @@
     addr.sun_family = AF_UNIX;
 
     if (filePath.length > sizeof(addr.sun_path)) {
-        NSLog(@"failure: path too long");
+      //  NSLog(@"failure: path too long");
         return false;
     }
 
@@ -165,7 +165,7 @@
 
     int status = bind(self.serverSocket, (struct sockaddr *)&addr, sizeof(addr));
     if (status < 0) {
-        NSLog(@"failure: socket binding");
+       // NSLog(@"failure: socket binding");
         return false;
     }
 
@@ -186,7 +186,7 @@
 - (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
-            NSLog(@"[%@] Stream opened", self.identifier);
+          //  NSLog(@"[%@] Stream opened", self.identifier);
             break;
         case NSStreamEventHasBytesAvailable:
           [self readBytesFromStream:(NSInputStream *)aStream];
@@ -197,17 +197,17 @@
                     len = [self.inputStream read:buffer maxLength:sizeof(buffer)];
                     if (len > 0) {
                         NSData *data = [NSData dataWithBytes:buffer length:len];
-                        NSLog(@"[%@] Received data: %@", self.identifier, data);
+                       // NSLog(@"[%@] Received data: %@", self.identifier, data);
                         // Process the received data as needed
                     }
                 }
             }
             break;
         case NSStreamEventErrorOccurred:
-            NSLog(@"[%@] Stream error: %@", self.identifier, aStream.streamError);
+         //   NSLog(@"[%@] Stream error: %@", self.identifier, aStream.streamError);
             break;
         case NSStreamEventEndEncountered:
-            NSLog(@"[%@] Stream end encountered", self.identifier);
+         //   NSLog(@"[%@] Stream end encountered", self.identifier);
             [aStream close];
             [aStream removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:kCFRunLoopDefaultMode];
             break;

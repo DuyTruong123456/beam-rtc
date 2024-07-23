@@ -65,21 +65,21 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
 
 - (void)readBytesFromStream:(NSInputStream *)stream {
     if (!stream.hasBytesAvailable) {
-        NSLog(@"No bytes available to read from stream.");
+       // NSLog(@"No bytes available to read from stream.");
         return;
     }
     
     uint8_t buffer[kMaxAudioReadLength];
     NSInteger numberOfBytesRead = [stream read:buffer maxLength:kMaxAudioReadLength];
     if (numberOfBytesRead < 0) {
-        NSLog(@"Error reading bytes from stream: %@", stream.streamError.localizedDescription);
+       // NSLog(@"Error reading bytes from stream: %@", stream.streamError.localizedDescription);
         return;
     }
    
     // Create NSData from the remaining data in buffer
     NSData *audioData = [NSData dataWithBytes:buffer length:numberOfBytesRead];
     [self processAudioData:audioData];
-    NSLog(@"Read %ld bytes from stream.", (long)numberOfBytesRead);
+   // NSLog(@"Read %ld bytes from stream.", (long)numberOfBytesRead);
    // NSLog(@"Buffer as NSData: %@", audioData);
 }
 
@@ -101,7 +101,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     );
 
     if (status != kCMBlockBufferNoErr) {
-        NSLog(@"CMBlockBuffer creation failed with status: %d", (int)status);
+      //  NSLog(@"CMBlockBuffer creation failed with status: %d", (int)status);
         return;
     }
     [self printFullData:data];
@@ -130,7 +130,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     );
 
     if (status != noErr) {
-        NSLog(@"CMAudioFormatDescription creation failed with status: %d", (int)status);
+      //  NSLog(@"CMAudioFormatDescription creation failed with status: %d", (int)status);
         CFRelease(blockBuffer);
         return;
     }
@@ -145,7 +145,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
         .presentationTimeStamp = startPresentationTime,
         .decodeTimeStamp = kCMTimeInvalid
     };
-    NSLog(@"Start Presentation Time: %.5f seconds", CMTimeGetSeconds(startPresentationTime));
+  //  NSLog(@"Start Presentation Time: %.5f seconds", CMTimeGetSeconds(startPresentationTime));
 
     // Create sample timing info array
 
@@ -172,30 +172,30 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     );
     CMTime duration = CMSampleBufferGetDuration(sampleBuffer);
     if (CMTIME_IS_INVALID(duration)) {
-        NSLog(@"Duration is invalid");
+      //  NSLog(@"Duration is invalid");
     } else {
-        NSLog(@"Duration: %.5f seconds", CMTimeGetSeconds(duration));
+      //  NSLog(@"Duration: %.5f seconds", CMTimeGetSeconds(duration));
     }
 
     // Get the presentation timestamp of the sample buffer
     CMTime presentationTimeStamp = CMSampleBufferGetOutputPresentationTimeStamp(sampleBuffer);
     if (CMTIME_IS_INVALID(presentationTimeStamp)) {
-        NSLog(@"Presentation timestamp is invalid");
+      //  NSLog(@"Presentation timestamp is invalid");
     } else {
-        NSLog(@"Presentation Timestamp: %.5f seconds", CMTimeGetSeconds(presentationTimeStamp));
+      //  NSLog(@"Presentation Timestamp: %.5f seconds", CMTimeGetSeconds(presentationTimeStamp));
     }
 
     // Get the decode timestamp of the sample buffer
     CMTime decodeTimeStamp = CMSampleBufferGetDecodeTimeStamp(sampleBuffer);
     if (CMTIME_IS_INVALID(decodeTimeStamp)) {
-        NSLog(@"Decode timestamp is invalid");
+      //  NSLog(@"Decode timestamp is invalid");
     } else {
-        NSLog(@"Decode Timestamp: %.2f seconds", CMTimeGetSeconds(decodeTimeStamp));
+      //  NSLog(@"Decode Timestamp: %.2f seconds", CMTimeGetSeconds(decodeTimeStamp));
     }
 
     if (status != noErr) {
         
-        NSLog(@"CMSampleBuffer creation failed with status: %d", (int)status);
+      //  NSLog(@"CMSampleBuffer creation failed with status: %d", (int)status);
         CFRelease(blockBuffer);
         CFRelease(audioFormatDescription);
         return;
@@ -234,7 +234,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
 - (void)stream:(NSStream *)aStream handleEvent:(NSStreamEvent)eventCode {
     switch (eventCode) {
         case NSStreamEventOpenCompleted:
-            NSLog(@"audio stream open completed");
+          //  NSLog(@"audio stream open completed");
             break;
         case NSStreamEventHasBytesAvailable:
             
@@ -242,12 +242,12 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
             
             break;
         case NSStreamEventEndEncountered:
-            NSLog(@"audio stream end encountered");
+          //  NSLog(@"audio stream end encountered");
             [self stopCapture];
             [self.eventsDelegate capturerDidEnd:self];
             break;
         case NSStreamEventErrorOccurred:
-            NSLog(@"audio stream error encountered: %@", aStream.streamError.localizedDescription);
+          //  NSLog(@"audio stream error encountered: %@", aStream.streamError.localizedDescription);
             break;
         default:
             break;

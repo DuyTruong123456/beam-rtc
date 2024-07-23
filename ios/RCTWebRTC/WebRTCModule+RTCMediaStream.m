@@ -131,10 +131,10 @@
 #endif
 
     RTCVideoSource *videoSource = [self.peerConnectionFactory videoSourceForScreenCast:YES];
-    NSLog(@"App videoSource",videoSource);
+    //NSLog(@"App videoSource",videoSource);
     NSString *trackUUID = [[NSUUID UUID] UUIDString];
     RTCVideoTrack *videoTrack = [self.peerConnectionFactory videoTrackWithSource:videoSource trackId:trackUUID];
-    NSLog(@"App videoTrack",videoTrack);
+    //NSLog(@"App videoTrack",videoTrack);
     ScreenCapturer *screenCapturer = [[ScreenCapturer alloc] initWithDelegate:videoSource];
     ScreenCaptureController *screenCaptureController =
         [[ScreenCaptureController alloc] initWithCapturer:screenCapturer];
