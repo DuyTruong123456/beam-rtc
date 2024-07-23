@@ -105,7 +105,9 @@ RCT_EXPORT_MODULE();
 - (dispatch_queue_t)methodQueue {
     return _workerQueue;
 }
-
+- (void)setExternalAudio:(BOOL)isExternal {
+    [self.audioDeviceModule setExternalAudio:isExternal];
+}
 - (NSArray<NSString *> *)supportedEvents {
     return @[
         kEventPeerConnectionSignalingStateChanged,

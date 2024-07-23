@@ -174,6 +174,15 @@
     return audioTrack;
 }
 
+RCT_EXPORT_METHOD(switchAudioRecord:(BOOL)enable resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
+#if TARGET_OS_TV
+    reject(@"unsupported_platform", @"tvOS is not supported", nil);
+    return;
+#else
+    [self.audioDeviceModule setExternalAudio:enable];
+    resolve(@(enable));  // Indicating the operation was successful
+#endif
+}
 
 
 

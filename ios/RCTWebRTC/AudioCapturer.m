@@ -85,32 +85,17 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
 
 
 - (void)processAudioData:(NSData *)data {
-    self.numBufferReceive++;
-    if (data.length < 13) {
-        NSLog(@"Data length is less than 13 bytes");
-        return;
-    }
-    
-    // First 13 bytes
-    NSData *timestampData = [data subdataWithRange:NSMakeRange(0, 13)];
-    NSLog(@"First 13 bytes: %@", timestampData);
-    NSString *timeStampDataString = [[NSString alloc] initWithData:timestampData encoding:NSUTF8StringEncoding];
-    float timeStampDataFloat = [timeStampDataString floatValue];
-    NSLog(@"First 13 bytes as float: %f", timeStampDataFloat);
-    // Remaining bytes after the first 13 bytes
-    NSData *soundData = [data subdataWithRange:NSMakeRange(13, data.length - 13)];
-    NSLog(@"Rest of data: %@", soundData);
     
     // Create CMBlockBuffer skipping first 13 bytes
     CMBlockBufferRef blockBuffer = NULL;
     OSStatus status = CMBlockBufferCreateWithMemoryBlock(
         kCFAllocatorDefault,
-        (void *)soundData.bytes,  // Pointer to data bytes after skipping first 13 bytes
-        soundData.length,
+        (void *)data.bytes,
+        data.length,
         kCFAllocatorNull,
         NULL,
         0,
-        soundData.length,
+        data.length,
         0,
         &blockBuffer
     );
@@ -119,11 +104,11 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
         NSLog(@"CMBlockBuffer creation failed with status: %d", (int)status);
         return;
     }
-    [self printFullData:soundData];
+    [self printFullData:data];
     // Create an audio format description.
     // This is an example format; adjust as necessary for your actual audio format.
     AudioStreamBasicDescription asbd = {0};
-      asbd.mSampleRate = 44100;
+      asbd.mSampleRate = 41100;
       asbd.mFormatID = kAudioFormatLinearPCM; // 'lpcm' for linear PCM
       asbd.mFormatFlags = kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
       asbd.mBytesPerPacket = 4;
@@ -151,10 +136,10 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     }
 
     // Number of samples
-    CMItemCount numSamples = soundData.length / asbd.mBytesPerFrame;
+    CMItemCount numSamples = data.length / asbd.mBytesPerFrame;
     CMTime frameDuration = CMTimeMake(1, asbd.mSampleRate);
    // CMTime startPresentationTime = CMTimeMultiply(frameDuration, self.numBufferReceive * numSamples);
-    CMTime startPresentationTime = CMTimeMakeWithSeconds(timeStampDataFloat, asbd.mSampleRate);
+    CMTime startPresentationTime = CMTimeMakeWithSeconds(1, asbd.mSampleRate);
     CMSampleTimingInfo timingInfo = {
         .duration = frameDuration,
         .presentationTimeStamp = startPresentationTime,
