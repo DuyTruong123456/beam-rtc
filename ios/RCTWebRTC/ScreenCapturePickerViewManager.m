@@ -16,7 +16,7 @@ RCT_EXPORT_MODULE()
 - (UIView *)view {
     _broadcastPickerView = [[RPSystemBroadcastPickerView alloc] init];
     _broadcastPickerView.preferredExtension = self.preferredExtension;
-    _broadcastPickerView.showsMicrophoneButton = false;
+    _broadcastPickerView.showsMicrophoneButton = true;
     _broadcastPickerView.userInteractionEnabled = false;
 
     return _broadcastPickerView;

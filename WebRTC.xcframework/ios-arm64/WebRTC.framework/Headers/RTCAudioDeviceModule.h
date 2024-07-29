@@ -14,7 +14,7 @@ NS_CLASS_AVAILABLE_IOS(2_0)
 - (void)deliverRecordedData:(CMSampleBufferRef)sampleBuffer;
 
 - (void)setExternalAudio:(bool)enable;
-
+- (void)resetUserAudio;
 @end
 
 NS_ASSUME_NONNULL_END

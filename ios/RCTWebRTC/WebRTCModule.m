@@ -10,6 +10,7 @@
 #import "WebRTCModule+RTCPeerConnection.h"
 #import "WebRTCModule.h"
 #import "WebRTCModuleOptions.h"
+#import <WebRTC/RTCAudioSessionConfiguration.h>
 @interface WebRTCModule ()
 @end
 
@@ -77,6 +78,9 @@
         _peerConnections = [NSMutableDictionary new];
         _localStreams = [NSMutableDictionary new];
         _localTracks = [NSMutableDictionary new];
+        RTCAudioSessionConfiguration *config ;
+
+        NSLog(@"App audioTrack sample rate: %f", config.sampleRate);
 
         dispatch_queue_attr_t attributes =
             dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, -1);

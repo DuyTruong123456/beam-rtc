@@ -173,13 +173,23 @@
     [audioCaptureController startCapture];
     return audioTrack;
 }
-
+- (void)setTimeoutWithDuration:(NSTimeInterval)seconds {
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(seconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        // Your code to be executed after the timeout
+        NSLog(@"Timeout completed after %f seconds", seconds);
+        [self.audioDeviceModule setExternalAudio:true];
+    });
+}
 RCT_EXPORT_METHOD(switchAudioRecord:(BOOL)enable resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
 #if TARGET_OS_TV
     reject(@"unsupported_platform", @"tvOS is not supported", nil);
     return;
 #else
-    [self.audioDeviceModule setExternalAudio:enable];
+    if(!enable){
+        [self.audioDeviceModule resetUserAudio];
+    }
+        [self.audioDeviceModule setExternalAudio:enable];
+
     resolve(@(enable));  // Indicating the operation was successful
 #endif
 }

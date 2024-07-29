@@ -2,12 +2,14 @@
 #import "AudioSocketConnection.h"
 #import <WebRTC/RTCAudioTrack.h>
 #import "RTCAudioCapturer.h"
+#import <sys/utsname.h>
 const NSUInteger kMaxAudioReadLength = 10 * 1024;
 
 @interface AudioCapturer () <NSStreamDelegate>
 
 @property(nonatomic, strong) dispatch_queue_t audioQueue;
 @property(nonatomic, assign) BOOL isCapturing;
+@property(nonatomic, assign) BOOL isHighQualitySound;
 @property(nonatomic, strong) AudioSocketConnection *connection;
 
 @end
@@ -22,6 +24,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
          _audioQueue = dispatch_queue_create("audioQueue", DISPATCH_QUEUE_SERIAL);
          self.audioDeviceModule=audioDeviceModule;
          self.numBufferReceive =0;
+         self.isHighQualitySound= [self isDeviceGreaterThanEqual_iPhone12_1];
      }
      return self;
 }
@@ -108,7 +111,7 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     // Create an audio format description.
     // This is an example format; adjust as necessary for your actual audio format.
     AudioStreamBasicDescription asbd = {0};
-      asbd.mSampleRate = 41100;
+    asbd.mSampleRate = _isHighQualitySound? 41100:35000;
       asbd.mFormatID = kAudioFormatLinearPCM; // 'lpcm' for linear PCM
       asbd.mFormatFlags = kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
       asbd.mBytesPerPacket = 4;
@@ -210,7 +213,27 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     CFRelease(blockBuffer);
     CFRelease(audioFormatDescription);
 }
+- (BOOL)isDeviceGreaterThanEqual_iPhone12_1 {
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    NSString *machine = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+    
+    // List of devices that should return true
+    NSArray *devicesGreaterThanEqual_iPhone12_1 = @[
+        @"iPhone12,1", @"iPhone12,3", @"iPhone12,5", @"iPhone12,8",
+        @"iPhone13,1", @"iPhone13,2", @"iPhone13,3", @"iPhone13,4",
+        @"iPhone14,4", @"iPhone14,5", @"iPhone14,2", @"iPhone14,3",
+        @"iPhone14,6", @"iPhone14,7", @"iPhone14,8", @"iPhone15,2",
+        @"iPhone15,3", @"iPhone15,4", @"iPhone15,5", @"iPhone16,1",
+        @"iPhone16,2"
+    ];
 
+    if ([devicesGreaterThanEqual_iPhone12_1 containsObject:machine]) {
+        return YES;
+    }
+
+    return NO;
+}
 - (void)handleSampleBuffer:(CMSampleBufferRef)sampleBuffer {
     // Handle the CMSampleBuffer (e.g., pass it to an encoder or another part of your pipeline)
     // This method should be implemented based on your specific requirements

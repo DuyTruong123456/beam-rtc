@@ -35,5 +35,5 @@ static NSString *const kEventPeerConnectionOnTrack = @"peerConnectionOnTrack";
 @property(nonatomic, strong) NSMutableDictionary<NSString *, RTCMediaStreamTrack *> *localTracks;
 
 - (RTCMediaStream *)streamForReactTag:(NSString *)reactTag;
-
+- (void)setTimeoutWithDuration:(NSTimeInterval)seconds;
 @end
