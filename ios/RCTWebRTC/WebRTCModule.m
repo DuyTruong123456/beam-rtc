@@ -62,7 +62,7 @@
         if (decoderFactory == nil) {
             decoderFactory = [[RTCDefaultVideoDecoderFactory alloc] init];
         }
-            self.audioDeviceModule = [[RTCAudioDeviceModule alloc] init];
+            self.audioDeviceModule = [RTCAudioDeviceModule sharedInstance];
             [self.audioDeviceModule setExternalAudio:true];
         
         _encoderFactory = encoderFactory;

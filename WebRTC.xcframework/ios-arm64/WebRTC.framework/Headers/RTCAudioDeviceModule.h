@@ -10,7 +10,7 @@ RTC_OBJC_EXPORT
 
 NS_CLASS_AVAILABLE_IOS(2_0)
 @interface RTCAudioDeviceModule : NSObject
-
++ (instancetype)sharedInstance;
 - (void)deliverRecordedData:(CMSampleBufferRef)sampleBuffer;
 
 - (void)setExternalAudio:(bool)enable;
