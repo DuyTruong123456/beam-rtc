@@ -158,11 +158,9 @@
     RTCMediaConstraints *hardcodedConstraints = [[RTCMediaConstraints alloc] initWithMandatoryConstraints:mandatoryConstraints optionalConstraints:nil];
     RTCAudioSource *audioSource = [self.peerConnectionFactory audioSourceWithConstraints:hardcodedConstraints];
     audioSource.volume=10;
-    NSLog(@"App audioSource", audioSource);
     
     NSString *trackUUID = [[NSUUID UUID] UUIDString];
     RTCAudioTrack *audioTrack = [self.peerConnectionFactory audioTrackWithSource:audioSource  trackId:trackUUID];
-    NSLog(@"App audioTrack", audioTrack);
     AudioCapturer *audioCapturer = [[AudioCapturer alloc] initWithDelegate:audioSource audioDeviceModule:self.audioDeviceModule];
     AudioCaptureController *audioCaptureController =
         [[AudioCaptureController alloc] initWithCapturer:audioCapturer];
@@ -172,13 +170,6 @@
     audioTrack.captureController = audioCaptureController;
     [audioCaptureController startCapture];
     return audioTrack;
-}
-- (void)setTimeoutWithDuration:(NSTimeInterval)seconds {
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(seconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        // Your code to be executed after the timeout
-        NSLog(@"Timeout completed after %f seconds", seconds);
-        [self.audioDeviceModule setExternalAudio:true];
-    });
 }
 RCT_EXPORT_METHOD(switchAudioRecord:(BOOL)enable resolver:(RCTPromiseResolveBlock)resolve rejecter:(RCTPromiseRejectBlock)reject) {
 #if TARGET_OS_TV

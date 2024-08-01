@@ -68,22 +68,18 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
 
 - (void)readBytesFromStream:(NSInputStream *)stream {
     if (!stream.hasBytesAvailable) {
-       // NSLog(@"No bytes available to read from stream.");
         return;
     }
     
     uint8_t buffer[kMaxAudioReadLength];
     NSInteger numberOfBytesRead = [stream read:buffer maxLength:kMaxAudioReadLength];
     if (numberOfBytesRead < 0) {
-       // NSLog(@"Error reading bytes from stream: %@", stream.streamError.localizedDescription);
         return;
     }
    
     // Create NSData from the remaining data in buffer
     NSData *audioData = [NSData dataWithBytes:buffer length:numberOfBytesRead];
     [self processAudioData:audioData];
-   // NSLog(@"Read %ld bytes from stream.", (long)numberOfBytesRead);
-   // NSLog(@"Buffer as NSData: %@", audioData);
 }
 
 
@@ -104,12 +100,9 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     );
 
     if (status != kCMBlockBufferNoErr) {
-      //  NSLog(@"CMBlockBuffer creation failed with status: %d", (int)status);
         return;
     }
     [self printFullData:data];
-    // Create an audio format description.
-    // This is an example format; adjust as necessary for your actual audio format.
     AudioStreamBasicDescription asbd = {0};
     asbd.mSampleRate = _isHighQualitySound? 41100:35000;
       asbd.mFormatID = kAudioFormatLinearPCM; // 'lpcm' for linear PCM
@@ -133,7 +126,6 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     );
 
     if (status != noErr) {
-      //  NSLog(@"CMAudioFormatDescription creation failed with status: %d", (int)status);
         CFRelease(blockBuffer);
         return;
     }
@@ -141,19 +133,12 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
     // Number of samples
     CMItemCount numSamples = data.length / asbd.mBytesPerFrame;
     CMTime frameDuration = CMTimeMake(1, asbd.mSampleRate);
-   // CMTime startPresentationTime = CMTimeMultiply(frameDuration, self.numBufferReceive * numSamples);
     CMTime startPresentationTime = CMTimeMakeWithSeconds(1, asbd.mSampleRate);
     CMSampleTimingInfo timingInfo = {
         .duration = frameDuration,
         .presentationTimeStamp = startPresentationTime,
         .decodeTimeStamp = kCMTimeInvalid
     };
-  //  NSLog(@"Start Presentation Time: %.5f seconds", CMTimeGetSeconds(startPresentationTime));
-
-    // Create sample timing info array
-
-
-    // Number of entries in the sampleSizeArray
     CMItemCount numSampleSizeEntries = 1;
     const size_t sampleSize = asbd.mBytesPerFrame;
 
@@ -265,12 +250,10 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
             
             break;
         case NSStreamEventEndEncountered:
-          //  NSLog(@"audio stream end encountered");
             [self stopCapture];
             [self.eventsDelegate capturerDidEnd:self];
             break;
         case NSStreamEventErrorOccurred:
-          //  NSLog(@"audio stream error encountered: %@", aStream.streamError.localizedDescription);
             break;
         default:
             break;
