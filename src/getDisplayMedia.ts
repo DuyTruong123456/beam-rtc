@@ -1,5 +1,5 @@
 
-import { NativeModules } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
 import MediaStream from 'react-native-webrtc/src/MediaStream';
 import MediaStreamError from 'react-native-webrtc/src/MediaStreamError';
@@ -15,7 +15,7 @@ export default function getDisplayMedia(): Promise<MediaStream> {
                 const info = {
                     streamId: streamId,
                     streamReactTag: streamId,
-                    tracks: track
+                    tracks: Platform.OS === 'android' ? [track] : track
                 };
 
                 const stream = new MediaStream(info);

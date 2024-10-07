@@ -3,6 +3,7 @@
 #import <WebRTC/RTCAudioTrack.h>
 #import "RTCAudioCapturer.h"
 #import <sys/utsname.h>
+#import <AVFoundation/AVFoundation.h>
 const NSUInteger kMaxAudioReadLength = 10 * 1024;
 
 @interface AudioCapturer () <NSStreamDelegate>
@@ -25,13 +26,23 @@ const NSUInteger kMaxAudioReadLength = 10 * 1024;
          self.audioDeviceModule=audioDeviceModule;
          self.numBufferReceive =0;
          self.isHighQualitySound= [self isDeviceGreaterThanEqual_iPhone12_1];
+         [self configureAudioSession];
      }
      return self;
 }
 - (void)dealloc {
     [self stopCapture];
 }
+- (void)configureAudioSession {
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    NSError *sessionError = nil;
+    [session setCategory:AVAudioSessionCategoryPlayAndRecord withOptions:AVAudioSessionCategoryOptionMixWithOthers error:&sessionError];
+    [session setActive:YES error:&sessionError];
 
+    if (sessionError) {
+        NSLog(@"Error setting up audio session: %@", sessionError.localizedDescription);
+    }
+}
 - (void)setConnection:(AudioSocketConnection *)connection {
     if (_connection != connection) {
         [_connection close];

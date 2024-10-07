@@ -39,17 +39,14 @@ import java.util.concurrent.ExecutionException;
 @ReactModule(name = "WebRTCModule")
 public class WebRTCModule extends ReactContextBaseJavaModule {
     static final String TAG = WebRTCModule.class.getCanonicalName();
-
+    final Map<String, MediaStream> localStreams;
+    // Need to expose the peer connection codec factories here to get capabilities
+    private final SparseArray<PeerConnectionObserver> mPeerConnectionObservers;
+    private final GetUserMediaImpl getUserMediaImpl;
     PeerConnectionFactory mFactory;
     VideoEncoderFactory mVideoEncoderFactory;
     VideoDecoderFactory mVideoDecoderFactory;
     AudioDeviceModule mAudioDeviceModule;
-
-    // Need to expose the peer connection codec factories here to get capabilities
-    private final SparseArray<PeerConnectionObserver> mPeerConnectionObservers;
-    final Map<String, MediaStream> localStreams;
-
-    private final GetUserMediaImpl getUserMediaImpl;
 
     public WebRTCModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -67,10 +64,10 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
         String fieldTrials = options.fieldTrials;
 
         PeerConnectionFactory.initialize(PeerConnectionFactory.InitializationOptions.builder(reactContext)
-                                                 .setFieldTrials(fieldTrials)
-                                                 .setNativeLibraryLoader(new LibraryLoader())
-                                                 .setInjectableLogger(injectableLogger, loggingSeverity)
-                                                 .createInitializationOptions());
+                .setFieldTrials(fieldTrials)
+                .setNativeLibraryLoader(new LibraryLoader())
+                .setInjectableLogger(injectableLogger, loggingSeverity)
+                .createInitializationOptions());
 
         if (injectableLogger == null && loggingSeverity != null) {
             Logging.enableLogToDebugOutput(loggingSeverity);
@@ -97,10 +94,10 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
         Log.d(TAG, "Using video decoder factory: " + decoderFactory.getClass().getCanonicalName());
 
         mFactory = PeerConnectionFactory.builder()
-                           .setAudioDeviceModule(adm)
-                           .setVideoEncoderFactory(encoderFactory)
-                           .setVideoDecoderFactory(decoderFactory)
-                           .createPeerConnectionFactory();
+                .setAudioDeviceModule(adm)
+                .setVideoEncoderFactory(encoderFactory)
+                .setVideoDecoderFactory(decoderFactory)
+                .createPeerConnectionFactory();
 
         // Saving the encoder and decoder factories to get codec info later when needed.
         mVideoEncoderFactory = encoderFactory;
@@ -108,6 +105,12 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
         mAudioDeviceModule = adm;
 
         getUserMediaImpl = new GetUserMediaImpl(this, reactContext);
+    }
+
+
+
+    public static boolean switchAudioRecordInWebRtc(boolean isUseSystemAudio) {
+        return GetUserMediaImpl.switchAudioRecord(isUseSystemAudio);
     }
 
     @NonNull
@@ -193,11 +196,11 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
         // Enable GCM ciphers.
         CryptoOptions cryptoOptions = CryptoOptions.builder()
-                                              .setEnableGcmCryptoSuites(true)
-                                              .setEnableAes128Sha1_32CryptoCipher(false)
-                                              .setEnableEncryptedRtpHeaderExtensions(false)
-                                              .setRequireFrameEncryption(false)
-                                              .createCryptoOptions();
+                .setEnableGcmCryptoSuites(true)
+                .setEnableAes128Sha1_32CryptoCipher(false)
+                .setEnableEncryptedRtpHeaderExtensions(false)
+                .setRequireFrameEncryption(false)
+                .createCryptoOptions();
         conf.cryptoOptions = cryptoOptions;
 
         if (map == null) {
@@ -447,21 +450,13 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
         return getUserMediaImpl.getTrack(trackId);
     }
 
-    public VideoTrack createVideoTrack(AbstractVideoCaptureController videoCaptureController) {
-        return getUserMediaImpl.createVideoTrack(videoCaptureController);
-    }
-
-    public void createStream(
-            MediaStreamTrack[] tracks, GetUserMediaImpl.BiConsumer<String, ArrayList<WritableMap>> successCallback) {
-        getUserMediaImpl.createStream(tracks, successCallback);
-    }
 
     /**
      * Turns an "options" <tt>ReadableMap</tt> into a <tt>MediaConstraints</tt> object.
      *
      * @param options A <tt>ReadableMap</tt> which represents a JavaScript
-     * object specifying the options to be parsed into a
-     * <tt>MediaConstraints</tt> instance.
+     *                object specifying the options to be parsed into a
+     *                <tt>MediaConstraints</tt> instance.
      * @return A new <tt>MediaConstraints</tt> instance initialized with the
      * mandatory keys and values specified by <tt>options</tt>.
      */
@@ -478,6 +473,7 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
         return mediaConstraints;
     }
+
 
     @ReactMethod(isBlockingSynchronousMethod = true)
     public WritableMap peerConnectionAddTransceiver(int id, ReadableMap options) {
@@ -944,7 +940,9 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void mediaStreamTrackSetVideoEffect(String id, String name) {
-        ThreadUtils.runOnExecutor(() -> { getUserMediaImpl.setVideoEffect(id, name); });
+        ThreadUtils.runOnExecutor(() -> {
+            getUserMediaImpl.setVideoEffect(id, name);
+        });
     }
 
     @ReactMethod
@@ -979,7 +977,9 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
             final SdpObserver observer = new SdpObserver() {
                 @Override
                 public void onCreateFailure(String s) {
-                    ThreadUtils.runOnExecutor(() -> { promise.reject("E_OPERATION_ERROR", s); });
+                    ThreadUtils.runOnExecutor(() -> {
+                        promise.reject("E_OPERATION_ERROR", s);
+                    });
                 }
 
                 @Override
@@ -1012,10 +1012,12 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
                 }
 
                 @Override
-                public void onSetFailure(String s) {}
+                public void onSetFailure(String s) {
+                }
 
                 @Override
-                public void onSetSuccess() {}
+                public void onSetSuccess() {
+                }
             };
 
             peerConnection.createOffer(observer, constraintsForOptions(options));
@@ -1036,7 +1038,9 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
             final SdpObserver observer = new SdpObserver() {
                 @Override
                 public void onCreateFailure(String s) {
-                    ThreadUtils.runOnExecutor(() -> { promise.reject("E_OPERATION_ERROR", s); });
+                    ThreadUtils.runOnExecutor(() -> {
+                        promise.reject("E_OPERATION_ERROR", s);
+                    });
                 }
 
                 @Override
@@ -1056,10 +1060,12 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
                 }
 
                 @Override
-                public void onSetFailure(String s) {}
+                public void onSetFailure(String s) {
+                }
 
                 @Override
-                public void onSetSuccess() {}
+                public void onSetSuccess() {
+                }
             };
 
             peerConnection.createAnswer(observer, constraintsForOptions(options));
@@ -1078,7 +1084,8 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
             final SdpObserver observer = new SdpObserver() {
                 @Override
-                public void onCreateSuccess(SessionDescription sdp) {}
+                public void onCreateSuccess(SessionDescription sdp) {
+                }
 
                 @Override
                 public void onSetSuccess() {
@@ -1101,11 +1108,14 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
                 }
 
                 @Override
-                public void onCreateFailure(String s) {}
+                public void onCreateFailure(String s) {
+                }
 
                 @Override
                 public void onSetFailure(String s) {
-                    ThreadUtils.runOnExecutor(() -> { promise.reject("E_OPERATION_ERROR", s); });
+                    ThreadUtils.runOnExecutor(() -> {
+                        promise.reject("E_OPERATION_ERROR", s);
+                    });
                 }
             };
 
@@ -1143,7 +1153,8 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
             final SdpObserver observer = new SdpObserver() {
                 @Override
-                public void onCreateSuccess(final SessionDescription sdp) {}
+                public void onCreateSuccess(final SessionDescription sdp) {
+                }
 
                 @Override
                 public void onSetSuccess() {
@@ -1179,11 +1190,14 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
                 }
 
                 @Override
-                public void onCreateFailure(String s) {}
+                public void onCreateFailure(String s) {
+                }
 
                 @Override
                 public void onSetFailure(String s) {
-                    ThreadUtils.runOnExecutor(() -> { promise.reject("E_OPERATION_ERROR", s); });
+                    ThreadUtils.runOnExecutor(() -> {
+                        promise.reject("E_OPERATION_ERROR", s);
+                    });
                 }
             };
 
@@ -1276,7 +1290,7 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
             }
 
             if (!(candidateMap.hasKey("sdpMid") && candidateMap.hasKey("sdpMLineIndex")
-                        && candidateMap.hasKey("sdpMid"))) {
+                    && candidateMap.hasKey("sdpMid"))) {
                 promise.reject("E_TYPE_ERROR", "Invalid argument");
                 return;
             }
@@ -1299,7 +1313,9 @@ public class WebRTCModule extends ReactContextBaseJavaModule {
 
                 @Override
                 public void onAddFailure(String s) {
-                    ThreadUtils.runOnExecutor(() -> { promise.reject("E_OPERATION_ERROR", s); });
+                    ThreadUtils.runOnExecutor(() -> {
+                        promise.reject("E_OPERATION_ERROR", s);
+                    });
                 }
             });
         });

@@ -3,6 +3,7 @@ package com.oney.WebRTCModule;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -22,6 +23,9 @@ import com.oney.WebRTCModule.videoEffects.VideoEffectProcessor;
 import com.oney.WebRTCModule.videoEffects.VideoFrameProcessor;
 
 import org.webrtc.*;
+import org.webrtc.audio.WebRtcAudioRecord;
+import org.webrtc.callback.CallbackManager;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,22 +40,22 @@ class GetUserMediaImpl {
     /**
      * The {@link Log} tag with which {@code GetUserMediaImpl} is to log.
      */
-    private static final String TAG = WebRTCModule.TAG;
+    private static final String TAG = "GetUserMediaImpl";
 
     private static final int PERMISSION_REQUEST_CODE = (int) (Math.random() * Short.MAX_VALUE);
+    private static final int SHARE_SCREEN = 0;
+    private static final int MIC = 1;
+    private static MediaProjection mProjection;
 
-    private CameraEnumerator cameraEnumerator;
     private final ReactApplicationContext reactContext;
-
     /**
      * The application/library-specific private members of local
      * {@link MediaStreamTrack}s created by {@code GetUserMediaImpl} mapped by
      * track ID.
      */
     private final Map<String, TrackPrivate> tracks = new HashMap<>();
-
     private final WebRTCModule webRTCModule;
-
+    private CameraEnumerator cameraEnumerator;
     private Promise displayMediaPromise;
     private Intent mediaProjectionPermissionResultData;
 
@@ -63,28 +67,48 @@ class GetUserMediaImpl {
             @Override
             public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
                 super.onActivityResult(activity, requestCode, resultCode, data);
+
                 if (requestCode == PERMISSION_REQUEST_CODE) {
                     if (resultCode != Activity.RESULT_OK) {
                         displayMediaPromise.reject("DOMException", "NotAllowedError");
                         displayMediaPromise = null;
                         return;
                     }
-
+                    MediaProjectionService.assignAbortService(reactContext);
                     mediaProjectionPermissionResultData = data;
 
                     ThreadUtils.runOnExecutor(() -> {
-                        MediaProjectionService.launch(activity);
-                        createScreenStream();
+                        MediaProjectionService.setListener(mediaProjection -> {
+                            webRTCModule.mAudioDeviceModule.setMediaProjection(mediaProjection);
+                            mProjection = mediaProjection;
+                            createScreenStream();
+                        });
+
+                        MediaProjectionService.setListener(() -> {
+                            mProjection = null;
+                        });
+                        MediaProjectionService.launch(activity, data);
+
                     });
                 }
             }
         });
     }
 
+    public static boolean switchAudioRecord(boolean isUseSystemAudio) {
+        ThreadUtils.runOnExecutor(() -> {
+            if (isUseSystemAudio) {
+                CallbackManager.executeCallback("MEDIA_PROJECTION", mProjection, SHARE_SCREEN);
+            } else {
+                CallbackManager.executeCallback("MEDIA_PROJECTION", null, MIC);
+            }
+        });
+        return isUseSystemAudio;
+    }
+
+
     private AudioTrack createAudioTrack(ReadableMap constraints) {
         ReadableMap audioConstraintsMap = constraints.getMap("audio");
-
-        Log.d(TAG, "getUserMedia(audio): " + audioConstraintsMap);
 
         String id = UUID.randomUUID().toString();
         PeerConnectionFactory pcFactory = webRTCModule.mFactory;
@@ -189,8 +213,6 @@ class GetUserMediaImpl {
         if (constraints.hasKey("video")) {
             ReadableMap videoConstraintsMap = constraints.getMap("video");
 
-            Log.d(TAG, "getUserMedia(video): " + videoConstraintsMap);
-
             CameraCaptureController cameraCaptureController =
                     new CameraCaptureController(getCameraEnumerator(), videoConstraintsMap);
 
@@ -204,7 +226,7 @@ class GetUserMediaImpl {
             return;
         }
 
-        createStream(new MediaStreamTrack[] {audioTrack, videoTrack}, (streamId, tracksInfo) -> {
+        createStream(new MediaStreamTrack[]{audioTrack, videoTrack}, (streamId, tracksInfo) -> {
             WritableArray tracksInfoWritableArray = Arguments.createArray();
 
             for (WritableMap trackInfo : tracksInfo) {
@@ -224,6 +246,8 @@ class GetUserMediaImpl {
                 track.videoCaptureController.stopCapture();
             }
         }
+
+
     }
 
     void disposeTrack(String id) {
@@ -279,7 +303,7 @@ class GetUserMediaImpl {
         if (track == null) {
             displayMediaPromise.reject(new RuntimeException("ScreenTrack is null."));
         } else {
-            createStream(new MediaStreamTrack[] {track}, (streamId, tracksInfo) -> {
+            createStream(new MediaStreamTrack[]{track}, (streamId, tracksInfo) -> {
                 WritableMap data = Arguments.createMap();
 
                 data.putString("streamId", streamId);
@@ -299,6 +323,7 @@ class GetUserMediaImpl {
     }
 
     void createStream(MediaStreamTrack[] tracks, BiConsumer<String, ArrayList<WritableMap>> successCallback) {
+
         String streamId = UUID.randomUUID().toString();
         MediaStream mediaStream = webRTCModule.mFactory.createLocalMediaStream(streamId);
 
@@ -336,11 +361,9 @@ class GetUserMediaImpl {
 
             tracksInfo.add(trackInfo);
         }
-
-        Log.d(TAG, "MediaStream id: " + streamId);
         webRTCModule.localStreams.put(streamId, mediaStream);
-
         successCallback.accept(streamId, tracksInfo);
+
     }
 
     private VideoTrack createScreenTrack() {
@@ -349,6 +372,7 @@ class GetUserMediaImpl {
         int height = displayMetrics.heightPixels;
         ScreenCaptureController screenCaptureController = new ScreenCaptureController(
                 reactContext.getCurrentActivity(), width, height, mediaProjectionPermissionResultData);
+
         return createVideoTrack(screenCaptureController);
     }
 
@@ -381,7 +405,7 @@ class GetUserMediaImpl {
 
         track.setEnabled(true);
         tracks.put(id, new TrackPrivate(track, videoSource, videoCaptureController, surfaceTextureHelper));
-
+        Log.d(TAG, "createVideoTrack: " + tracks.size());
         videoCaptureController.startCapture();
 
         return track;
@@ -390,8 +414,9 @@ class GetUserMediaImpl {
     /**
      * Set video effect to the TrackPrivate corresponding to the trackId with the help of VideoEffectProcessor
      * corresponding to the name.
+     *
      * @param trackId TrackPrivate id
-     * @param name VideoEffectProcessor name
+     * @param name    VideoEffectProcessor name
      */
     void setVideoEffect(String trackId, String name) {
         TrackPrivate track = tracks.get(trackId);
@@ -416,6 +441,10 @@ class GetUserMediaImpl {
                 videoSource.setVideoProcessor(null);
             }
         }
+    }
+
+    public interface BiConsumer<T, U> {
+        void accept(T t, U u);
     }
 
     /**
@@ -454,7 +483,7 @@ class GetUserMediaImpl {
          *                               {@code track} is a {@link VideoTrack}
          */
         public TrackPrivate(MediaStreamTrack track, MediaSource mediaSource,
-                AbstractVideoCaptureController videoCaptureController, SurfaceTextureHelper surfaceTextureHelper) {
+                            AbstractVideoCaptureController videoCaptureController, SurfaceTextureHelper surfaceTextureHelper) {
             this.track = track;
             this.mediaSource = mediaSource;
             this.videoCaptureController = videoCaptureController;
@@ -488,5 +517,4 @@ class GetUserMediaImpl {
         }
     }
 
-    public interface BiConsumer<T, U> { void accept(T t, U u); }
 }
